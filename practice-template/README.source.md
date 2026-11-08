@@ -2,7 +2,7 @@
 
 # Claude Code practice
 
-Your practice copy for [Claude Code Quest](https://github.com/wesammustafa/Claude-Code-Quest). The lessons live in the guide. This copy holds the web learning app that takes you through every core lesson and capstone one step at a time, the small project you practise on, and a check for every core lesson and capstone.
+Your practice copy for [Claude Code Quest](https://github.com/wesammustafa/Claude-Code-Quest). The lessons live in the guide; this copy holds the app that walks you through them, the project you practise on, and a check for every core lesson and capstone.
 
 An independent educational project. Not affiliated with or endorsed by Anthropic.
 
@@ -16,32 +16,28 @@ You need Node.js 22 or later and git. There is nothing to install with npm.
    npm run learn
    ```
 
-   It prints the address it serves on and opens your browser there. If the browser does not open, open the printed address yourself.
+   It prints its address and opens your browser there. If the browser does not open, open the printed address yourself. In a Codespace, it prints the forwarded address instead: keep that port private, since the app is for you alone.
 2. In a second terminal, go into `project/`. You start Claude Code there, not at the root of your copy, and lesson 1 installs it if you don't have it yet:
 
    ```bash
    cd project
    ```
 
-   The lessons happen in `project/`, and the course's own folders stay outside it.
-
-Claude Code Quest runs each check with the PATH of the terminal that started it. If you install Claude Code or another tool, or change your PATH, while it runs, close that terminal and run `npm run learn` again from a new terminal window at the root of your copy. Your progress is saved in `.practice/`.
-
-In a Codespace, `npm run learn` prints the forwarded address to open instead. Keep that port private: the app is for you alone.
+Claude Code Quest runs each check with the PATH of the terminal that started it. If you install Claude Code or another tool, or change your PATH, while it runs, close that terminal and run `npm run learn` again from a new terminal window at the root of your copy.
 
 ## What each folder is
 
 - `project/`: the small project you practise on, a Markdown link checker with its tests. This is where you work, and where Claude Code runs.
 - `learn/`: Claude Code Quest, built for this release. It is generated: never edit it.
 - `checks/`: the check for each core lesson and capstone.
-- `capstone/`: the briefs for the three capstones.
-- `.practice/` at the root: Claude Code Quest's saved progress.
+- `capstone/`: the briefs and bug reports the capstones start from.
+- `.practice/`: Claude Code Quest's saved progress.
 
-`checks/`, `capstone/`, `learn/` and the root `.practice/` are course machinery. They sit outside `project/`, the folder you work in.
+Everything outside `project/` is course machinery.
 
 ## Check your work
 
-Each core lesson and each capstone ends with a check. Claude Code Quest runs it for you, and you can also run it yourself from `project/`:
+Claude Code Quest runs each check for you. To run one yourself, from `project/`:
 
 ```bash
 npm run check -- b-1
@@ -63,10 +59,8 @@ Each core lesson and capstone has a reference solution at the release this copy 
 
 ## Already have an older copy?
 
-To bring an older practice copy up to this release, follow [Already have a practice copy?](https://github.com/wesammustafa/Claude-Code-Quest#already-have-a-practice-copy) in the guide's README.
+Follow [Already have a practice copy?](https://github.com/wesammustafa/Claude-Code-Quest#already-have-a-practice-copy) in the guide's README to bring it up to this release.
 
 ## License
 
-The project in `project/` is under the MIT License: see [project/LICENSE](project/LICENSE). `learn/` holds the license notice of every package it bundles.
-
-`checks/` and `capstone/` are under the same MIT License: see [project/LICENSE](project/LICENSE). The app in `learn/` is under the [guide repository's license](quest-release:LICENSE) at this release.
+`project/`, `checks/` and `capstone/` are under the MIT License: see [project/LICENSE](project/LICENSE). The app in `learn/` is under the [guide repository's license](quest-release:LICENSE) at this release, and `learn/THIRD-PARTY-NOTICES.txt` holds the license notice of every package it bundles.
