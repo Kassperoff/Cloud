@@ -105,7 +105,7 @@ const unknown = (option: string) =>
 
 describe("baselineVersion", () => {
   test("reads the baseline from the real CHANGELOG", () => {
-    expect(BASELINE).toBe("2.1.309");
+    expect(BASELINE).toBe("2.1.311");
   });
 
   test("throws without the Baseline line", () => {
