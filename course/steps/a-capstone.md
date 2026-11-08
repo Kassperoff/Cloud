@@ -124,7 +124,7 @@ needs: [jq gh]
 - beat: do
 - verify: match .github/workflows/claude-review.yml anthropics/claude-code-action@
 - say: Write the CI review workflow, then commit it.
-- hint: "`.github/workflows/claude-review.yml` runs on `pull_request`"
+- note: "`.github/workflows/claude-review.yml` runs on `pull_request`"
 - hint: "Hold it to lesson 5's limits, and one more"
 - hint: "a `concurrency` group for the pull request with `cancel-in-progress: true`, so a new push cancels the review still running for an older one"
 - hint: "uses `anthropics/claude-code-action` (Anthropic) with your skill, `/<name>`, as its `prompt`"
@@ -152,9 +152,9 @@ needs: [jq gh]
 - wait: long
 - goal: "Then push a one-line change on a new branch and open a pull request."
 - note: "`display_report` writes Claude's review to the job summary, which GitHub shows on the run's summary page"
+- do: "find the run's id with `gh run list --workflow claude-review.yml --limit 1`"
 - run: "gh run view <run-id> --web"
 - say: Read the review, and merge the pull request yourself.
-- hint: "find the run's id with `gh run list --workflow claude-review.yml --limit 1`"
 - beat: do
 - where: shell
 - skill: save-version
