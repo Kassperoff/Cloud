@@ -59,6 +59,7 @@ badge: Beginner
 - beat: do
 - verify: self
 - goal: "Have Claude read the bug report and plan the fix."
+- note: "A teammate filed the bug report in `capstone/beginner-bug.md` at the root of your practice copy, outside `project/` (`../capstone/beginner-bug.md` from `project/`)"
 - note: "From `project/`, the report is outside Claude's working directory: by default, Claude has access to files in the directory where you launched it"
 - note: "So Claude Code may ask before it reads the report: allow that read."
 - note: "Or the read may need no prompt: Claude can read the report with a shell command such as `cat` instead, and Claude Code runs a built-in set of read-only commands, `cat` among them, without a permission prompt, unless `permissions.blockReadsOutsideWorkingDirectories` is on"
@@ -112,9 +113,9 @@ badge: Beginner
 - beat: do
 - verify: self
 - goal: "Review the whole diff, the tests included, against the bug report"
+- do: "Ask Claude to correct anything that falls short, inside the files the plan names, and make sure `npm test` passes."
 - hint: "If the diff panel is open beside the conversation, its list skips test files and generated files and counts them on one line: click that count line to see the test ([Diff panel](https://code.claude.com/docs/en/interactive-mode#diff-panel))."
 - hint: "Does the error name the missing folder? Does the tool exit with code 2? Does the test check the case the report describes?"
-- hint: "Ask Claude to correct anything that falls short, inside the files the plan names, and make sure `npm test` passes."
 
 ### T8 | The task step 8 of 8 | Save the reviewed commit
 - tier: challenge
