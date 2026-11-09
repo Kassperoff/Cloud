@@ -1,6 +1,6 @@
 # Install and manage plugins
 
-<sub>**Intermediate** · Lesson 8 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Enforce a rule with a hook](05-hooks.md), [Delegate to a custom subagent](06-subagents.md), [Connect a tool with MCP](07-mcp.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
+<sub>**Intermediate** · Lesson 8 of 8 · about 25 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md), [Enforce a rule with a hook](05-hooks.md), [Delegate to a custom subagent](06-subagents.md), [Connect a tool with MCP](07-mcp.md) · Verified against Claude Code v2.1.311 (stable) on 2026-11-09</sub>
 
 ## Goal
 
@@ -26,7 +26,7 @@ The [install scope](https://code.claude.com/docs/en/plugins/install#choose-an-in
 | Project | Your collaborators | `.claude/settings.json`, committed |
 | Local | You, in this repository | `.claude/settings.local.json` |
 
-A shared setting does not download the plugin to a teammate's machine. They install it too. A local trial lets you evaluate the result before proposing a team dependency.
+A shared setting does not download the plugin to a teammate's machine unless its marketplace entry has a relative-path source; otherwise teammates install it too ([Enabled in project settings but not installed](https://code.claude.com/docs/en/plugins/loading#enabled-in-project-settings-but-not-installed)). A local trial lets you evaluate the result before proposing a team dependency.
 
 [Code intelligence](https://code.claude.com/docs/en/plugins/code-intelligence#see-what-claude-gains) adds diagnostics and symbol navigation through a language server. Installing the plugin alone does not install that server. Confirm a real lookup, rather than treating an installed label as proof it works.
 
