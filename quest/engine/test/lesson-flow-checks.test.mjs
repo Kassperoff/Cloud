@@ -153,6 +153,25 @@ test("a passed check's .txt evidence shows every line, so a list shows each entr
     ],
     "a long list shows how many more lines it holds",
   );
+  // A long row keeps its first word and its end, so the two rules of
+  // d264-i2's load log read apart.
+  const root = "/Users/Shared/learn-runs/d264-i2/project";
+  const loaded = checkEvidenceOf(
+    Buffer.from(
+      [
+        `path_glob_match\t${root}/.claude/rules/testing.md`,
+        `path_glob_match\t${root}/.claude/rules/cli.md`,
+        "include short.md",
+      ].join("\n"),
+    ),
+    ".practice/i-2-loaded.txt",
+  ).split("\n");
+  assert.deepEqual(loaded, [
+    "path_glob_match …ns/d264-i2/project/.claude/rules/testing.md",
+    "path_glob_match …n-runs/d264-i2/project/.claude/rules/cli.md",
+    "include short.md",
+  ]);
+  for (const row of loaded) assert.ok(row.length <= 60, row);
   // JSON, HTML and every other file keep the one line evidenceOf picks.
   assert.equal(
     checkEvidenceOf(
