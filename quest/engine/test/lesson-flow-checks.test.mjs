@@ -37,6 +37,7 @@ import {
 import { midway } from "./flow-places.mjs";
 import { project } from "../src/index.ts";
 import { fingerprint } from "../src/content.ts";
+import { EVIDENCE_ROWS, checkEvidenceOf } from "../src/holds.ts";
 
 // A saved place in lesson 1, opened.
 const at = (step, extra = {}) => {
@@ -115,6 +116,63 @@ test('a check step waits, says "not yet" only when something changed, and turns 
   assert.equal(watching(d.state), null, "a done step watches nothing");
   d.cont();
   assert.equal(stepOf(d.state).id, "W4");
+});
+
+test("a passed check's .txt evidence shows every line, so a list shows each entry; any other file shows its first line (263)", () => {
+  const status = [
+    " M project/src/check-links.js",
+    " M project/src/links.js",
+    " M project/test/links.test.js",
+  ];
+  const d = at("W3");
+  d.send({ type: "check", lesson: "b-1", items: [missing] });
+  d.send({
+    type: "check",
+    lesson: "b-1",
+    items: [passed],
+    read: Buffer.from(`${status.join("\n")}\n\n`),
+    path: ".practice/version.txt",
+  });
+  assert.equal(d.state.beat.status, "done");
+  assert.equal(
+    d.state.beat.evidence,
+    status.map((line) => line.trim()).join("\n"),
+  );
+  const list = ".practice/b-4-before-rewind.txt";
+  assert.equal(
+    checkEvidenceOf(Buffer.from("\n \n"), list),
+    null,
+    "a blank file shows none",
+  );
+  const long = Array.from({ length: EVIDENCE_ROWS + 3 }, (_, i) => `row ${i}`);
+  assert.deepEqual(
+    checkEvidenceOf(Buffer.from(long.join("\n")), list).split("\n"),
+    [
+      ...long.slice(0, EVIDENCE_ROWS - 1),
+      `row ${EVIDENCE_ROWS - 1} and 3 more lines`,
+    ],
+    "a long list shows how many more lines it holds",
+  );
+  // JSON, HTML and every other file keep the one line evidenceOf picks.
+  assert.equal(
+    checkEvidenceOf(
+      Buffer.from('{\n  "a": 1,\n  "b": [\n    2\n  ]\n}\n'),
+      ".practice/a-4-result.json",
+    ),
+    '"a": 1,',
+  );
+  assert.equal(
+    checkEvidenceOf(
+      Buffer.from("<h1>Demo</h1>\n<p>One</p>\n"),
+      ".practice/demo.html",
+    ),
+    "<h1>Demo</h1>",
+  );
+  assert.equal(
+    checkEvidenceOf(Buffer.from(status.join("\n")), null),
+    status[0].trim(),
+    "a result that names no file shows its first line",
+  );
 });
 
 // was learn-flow:54
