@@ -176,6 +176,9 @@ export interface BeatState {
   // The first answer the beat started from: undefined until there is one.
   baseline?: string | null | undefined;
   slowWait?: boolean;
+  // The beat's arrival run runs its slow items too (openBeat): a poll that
+  // leaves them out and lands first is no first answer.
+  slowArrival?: boolean;
   // The latest real result of each slow item this beat visit ran: a poll
   // leaves them out, so the card keeps these (ticket 344).
   slowRan?: CheckItem[];

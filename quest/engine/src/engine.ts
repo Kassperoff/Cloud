@@ -1189,19 +1189,32 @@ function openBeat(s: EngineState, effects: Effect[]) {
   } else if (beat.verify.kind === "check") {
     st.status = "opening";
     // A beat that checks only slow items runs them on arrival; mixed beats
-    // leave them for r (ticket 309).
+    // leave them for r (ticket 309), unless the check beat just passed ran
+    // and passed each slow item this one checks: then this arrival runs
+    // them again, so the card shows how they stand now rather than "Runs on
+    // Check again" for lines it just showed passing (263).
     const slow = lessonIn(s).slow ?? [];
     const items = beat.verify.all ? null : beat.verify.items;
     const allSlow =
       items !== null &&
       items.length > 0 &&
       items.every((i) => slow.includes(i));
+    const slowHere = (items ?? lessonIn(s).items.map((_, i) => i)).filter((i) =>
+      slow.includes(i),
+    );
+    const passedBefore =
+      kept !== undefined &&
+      slowHere.length > 0 &&
+      slowHere.every((i) =>
+        kept.items.some((it) => it.index === i && !it.slow && it.pass),
+      );
+    st.slowArrival = allSlow || passedBefore;
     effects.push({
       type: "check",
       lesson: s.lesson,
       items,
       evidence: beat.evidence ?? null,
-      ...(allSlow ? { slow: true as const } : {}),
+      ...(st.slowArrival ? { slow: true as const } : {}),
       dir: folderOf(s, s.lesson, step),
     });
   } else if (isReadVerify(beat.verify)) {
@@ -1735,17 +1748,13 @@ function onCheck(
   if (!failing && wanted.some((it) => it.slow)) {
     // A beat of only slow items ran them on arrival (openBeat): a later poll
     // without them can't add to that answer, so it and its rows stay.
-    // The same while the arrival run that runs them is still going: a poll
-    // that lands first is no first answer (ticket 344).
+    // The same while an arrival run that runs them is still going: a poll
+    // that lands first is no first answer (ticket 344, 263).
     const arriving =
-      st.status === "opening" &&
-      !st.asked &&
-      !beat.verify.all &&
-      beat.verify.items.every((i) => slow.includes(i));
+      st.status === "opening" && !st.asked && Boolean(st.slowArrival);
     if (
-      wanted.every((it) => it.slow) &&
-      (st.status === "waiting" || arriving) &&
-      !st.slowWait
+      arriving ||
+      (wanted.every((it) => it.slow) && st.status === "waiting" && !st.slowWait)
     ) {
       if (before) s.checks[ev.lesson] = before;
       return;

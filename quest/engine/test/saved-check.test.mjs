@@ -187,3 +187,84 @@ test("the save keeps a well-formed pass, capped, and drops a malformed one", () 
       JSON.stringify(bad),
     );
 });
+
+// b-3's last Your turn step checks every item, slow ones too, and so does
+// its Check step right after it (263). The place of a step, with every step
+// before it done.
+const placeOf = (id, stepId) => {
+  const steps = lessonOf(id).content.steps;
+  const k = steps.findIndex((x) => x.id === stepId);
+  return { step: stepId, beat: 0, done: steps.slice(0, k).map((x) => x.id) };
+};
+// Every item the beat on the card checks, passing, each slow one a
+// placeholder when `placeholders` says so, as a poll's run leaves it out.
+const run = (d, { placeholders }) => {
+  const slow = lessonOf(d.state.lesson).slow;
+  return checkItems(d.state, true).map((it) =>
+    placeholders && slow.includes(it.index)
+      ? { ...it, pass: false, slow: true }
+      : it,
+  );
+};
+// b-3 on its last Your turn step, passed by Check again, then moved on.
+const pastY5 = () => {
+  const d = at("b-3", placeOf("b-3", "Y5"));
+  d.open("b-3");
+  const first = pending(d, "check");
+  assert.equal("slow" in first, false, "a mixed beat leaves slow items to r");
+  d.send(checkResult(first, run(d, { placeholders: true })));
+  d.run();
+  const asked = pending(d, "check");
+  assert.equal(asked.slow, true);
+  d.send(checkResult(asked, run(d, { placeholders: false })));
+  assert.equal(beatView(d).status, "done");
+  d.cont();
+  assert.equal(d.state.progress["b-3"].step, "C");
+  return d;
+};
+
+test("a check step right after one whose Check again passed its slow lines runs them on arrival, so they show passing, not Runs on Check again (263)", () => {
+  const d = pastY5();
+  const arrival = pending(d, "check");
+  assert.equal(arrival.items, null, "the Check step checks every item");
+  assert.equal(arrival.slow, true, "its arrival runs the slow items too");
+  assert.equal("asked" in arrival, false, "the arrival run is not an r-run");
+  // A poll that leaves them out and lands first is no first answer.
+  d.send(checkResult(arrival, run(d, { placeholders: true })));
+  assert.equal(beatView(d).status, "checking");
+  d.send(checkResult(arrival, run(d, { placeholders: false })));
+  const view = beatView(d);
+  assert.equal(view.status, "already");
+  assert.equal(view.slowWait, false);
+  assert.equal(view.verification.length, lessonOf("b-3").items.length);
+  assert.ok(
+    view.verification.every((line) => line.pass && !("pending" in line)),
+    JSON.stringify(view.verification),
+  );
+});
+
+test("a slow line that fails on such an arrival waits for the learner, its row for Check again (263)", () => {
+  const d = pastY5();
+  const slowAt = lessonOf("b-3").slow[0];
+  d.send(
+    checkResult(
+      pending(d, "check"),
+      run(d, { placeholders: false }).map((it) =>
+        it.index === slowAt ? { ...it, pass: false, hint: "not yet" } : it,
+      ),
+    ),
+  );
+  const view = beatView(d);
+  assert.equal(view.status, "waiting", "an arrival FAIL is no Not yet (344)");
+  const text = lessonOf("b-3").items[slowAt];
+  assert.deepEqual(
+    view.verification.find((line) => line.text === text),
+    { text, pass: false, pending: true },
+  );
+});
+
+test("a check step opened without such a pass before it leaves its slow items to Check again (263)", () => {
+  const d = at("b-3", placeOf("b-3", "C"));
+  d.open("b-3");
+  assert.equal("slow" in pending(d, "check"), false);
+});
