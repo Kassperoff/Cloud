@@ -646,6 +646,31 @@ test("a slow item keeps what Check again saw when a poll leaves it out (ticket 3
     { text: gateItem(true).text, pass: true },
   ]);
 });
+test("a poll after a slow line's Not yet keeps the Not yet's words, not the slow-wait words (263)", () => {
+  const d = onGate();
+  d.send({ type: "check", lesson: "i-5", items: [gateItem(false)] });
+  d.run();
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [gateItem(false)],
+    asked: d.state.beat.asked,
+  });
+  assert.equal(d.state.beat.status, "fail");
+  d.send({
+    type: "check",
+    lesson: "i-5",
+    items: [{ ...gateItem(false), slow: true, hint: "" }],
+  });
+  const view = project(d.state).lesson.beat;
+  assert.equal(view.status, "fail", "the Not yet stays");
+  assert.equal(
+    view.slowWait,
+    false,
+    "no line passes, so nothing says everything else passes",
+  );
+  assert.equal(d.state.beat.fail.hint, gateItem(false).hint);
+});
 test("b-2's Record the plan moment waits on arrival, through its polls, until the learner acts (ticket 344)", () => {
   const d = midway("b-2", "Y4");
   assert.deepEqual(beatOf(d.state).verify, {
