@@ -1,6 +1,6 @@
 # Bug: a malformed percent escape stops linkcheck
 
-A teammate copied `[broken](bad%.md)` into a Markdown file. Running linkcheck on its folder stops at that link, so no link is reported, the later broken links included. Depending on `src/cli.js`, it crashes with a stack trace ending `URIError: URI malformed` and exits with code 1, or prints `linkcheck: URI malformed` and exits with code 2.
+A teammate copied `[broken](bad%.md)` into a Markdown file. Running linkcheck on its folder stops at that link, so no link is reported, the later broken links included. Depending on `src/cli.js`, it crashes with `URIError: URI malformed` and a stack trace, exiting with code 1, or prints `linkcheck: URI malformed` and exits with code 2.
 
 Reproduce this outside `samples/`, then fix the checker:
 

@@ -149,7 +149,7 @@ needs: [jq python3]
 - done-label: I reproduced it
 - goal: "Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow"
 - note: "a link such as `[broken](bad%.md)` stops the checker before it reports any link."
-- hint: "Depending on your copy's `src/cli.js`, it crashes with a stack trace ending `URIError: URI malformed` and exits with code 1, or prints `linkcheck: URI malformed` and exits with code 2."
+- hint: "Depending on your copy's `src/cli.js`, it crashes with `URIError: URI malformed` and a stack trace, exiting with code 1, or prints `linkcheck: URI malformed` and exits with code 2."
 - note: "If Claude Code shows the "Claude in Chrome extension detected" dialog as it starts, choose **No, keep browser tools off**: the docs open in the browser that the chrome-devtools server starts"
 - beat: do
 - verify: self
