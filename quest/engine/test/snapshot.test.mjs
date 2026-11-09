@@ -37,6 +37,8 @@ import {
 } from "./drive.mjs";
 import { project, startedLesson } from "../src/index.ts";
 import { fingerprint } from "../src/content.ts";
+import { PROBES } from "../src/probes.ts";
+import { PROBE_LINES, watchLine } from "../src/status.ts";
 
 const lesson = (id) => course.find((l) => l.id === id);
 // A driver on a saved place, the lesson opened.
@@ -546,6 +548,51 @@ test("playing: a watched beat with no Done when line names what it looks for as 
   ]);
   // A beat its button decides shows its lines on the card: none is added.
   assert.deepEqual(doneWhen("b-2", "W6", 0), []);
+});
+
+test("playing: a probe beat names what its probe tests as its Check line (ticket 265)", () => {
+  const doneWhen = (id, step, beat) =>
+    view(at(id, { step, beat }, { course: liveCourse }))
+      .beat.lines.filter((l) => l.doneWhen)
+      .map((l) => [l.kind, l.text]);
+  // a-1's probe beats: pushed, worktrees, branch-ahead, merged and gone.
+  for (const [step, beat, text] of [
+    ["W1", 1, "your branch is pushed to its remote"],
+    ["W2", 0, "a worktree is under .claude/worktrees/"],
+    ["W3", 0, "at least 2 worktrees are under .claude/worktrees/"],
+    ["W4", 1, "worktree-docs-pass has a new commit"],
+    [
+      "W5",
+      0,
+      "worktree-docs-pass and worktree-test-pass are merged into your branch",
+    ],
+    ["W6", 1, "no worktree is left at .claude/worktrees/docs-pass"],
+  ])
+    assert.deepEqual(doneWhen("a-1", step, beat), [["say", text]], step);
+  // a-capstone's removed probe names its file.
+  assert.deepEqual(doneWhen("a-capstone", "D1", 0), [
+    [
+      "say",
+      ".github/workflows/claude-review.yml is deleted, and the deletion is pushed",
+    ],
+  ]);
+});
+
+test("every probe has a Check line, worded for its arguments (ticket 265)", () => {
+  for (const name of Object.keys(PROBES))
+    assert.equal(typeof PROBE_LINES[name], "function", name);
+  const line = (name, ...args) => watchLine({ kind: "probe", name, args });
+  assert.equal(line("merged", "a"), "a is merged into your branch");
+  assert.equal(
+    line("removed", "a.yml", "b.yml", "c.yml"),
+    "a.yml, b.yml and c.yml are deleted, and the deletion is pushed",
+  );
+  assert.equal(line("todos", "1"), "TODO or FIXME is in a top-level folder");
+  assert.equal(
+    line("todos", "3"),
+    "TODO or FIXME is in at least 3 top-level folders",
+  );
+  assert.equal(line("no-such-probe"), null);
 });
 
 test("playing: a recall question shows the guess it recalls, the one earlier answer on screen", () => {
