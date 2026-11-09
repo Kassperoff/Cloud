@@ -97,11 +97,11 @@ Afterwards, give one of your own repositories the same start: `/init`, compare e
 
 You are done when all of these are true:
 
-- [ ] A committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line: `git show HEAD:CLAUDE.md` ([git show](https://git-scm.com/docs/git-show)) shows it.
+- [ ] A committed CLAUDE.md has a rule that every new JavaScript file in `src/` starts with a given line: `git show HEAD:./CLAUDE.md` ([git show](https://git-scm.com/docs/git-show)) shows it.
 - [ ] A commit made after that rule adds JavaScript files to `src/`, and each of them starts with the rule's line: `git log --stat -3` ([git log](https://git-scm.com/docs/git-log)) lists them.
 - [ ] The committed CLAUDE.md holds the notes' rule for CLI errors, and every `npm run` script it names is in `package.json`.
 - [ ] A committed `.gitignore` keeps `CLAUDE.local.md` out, git tracks no `CLAUDE.local.md`, and the committed CLAUDE.md holds neither personal note: `git check-ignore CLAUDE.local.md` ([git check-ignore](https://git-scm.com/docs/git-check-ignore)) prints its name.
-- [ ] The committed CLAUDE.md has no line about the course's folders or scripts: `git show HEAD:CLAUDE.md` shows none.
+- [ ] The committed CLAUDE.md has no line about the course's folders or scripts: `git show HEAD:./CLAUDE.md` shows none.
 - [ ] Self-check (not tested): the session that wrote `src/stats.js` started after you committed the rule, and its `/context all` listed `CLAUDE.md` under **Memory files**. Your `CLAUDE.local.md` holds the sample-docs note: git ignores that file, so the check can't see it.
 
 Run `npm run check -- b-5` in your practice copy.
