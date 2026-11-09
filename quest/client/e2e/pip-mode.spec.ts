@@ -28,11 +28,47 @@ const card = (page: Page) => page.locator("[data-pip-target=lines] li").last();
  * while the bubble says Checking. A batch of mutations can hold more than one
  * change of the mode: each record's old value is the mode the one before it
  * set, so a short Thinking is never lost between two reads.
+ *
+ * It also reads the event stream's frames before the page does: it counts
+ * the check.started frames in `window.__started` and holds whether a run is
+ * out, as Pip's director does, in `window.__checking`. Pip thinks only for a
+ * run that starts with check.started, and the step's timed poll is not such
+ * a run.
  */
 function recordModes(page: Page) {
   return page.addInitScript(() => {
     const seen: string[] = [];
-    (window as unknown as { __modes: string[] }).__modes = seen;
+    const record = window as unknown as {
+      __modes: string[];
+      __started: number;
+      __checking: boolean;
+    };
+    record.__modes = seen;
+    record.__started = 0;
+    record.__checking = false;
+    const results = [
+      "check.passed",
+      "check.notYet",
+      "check.broken",
+      "check.ended",
+    ];
+    const Source = window.EventSource;
+    window.EventSource = class extends Source {
+      constructor(url: string | URL, init?: EventSourceInit) {
+        super(url, init);
+        this.addEventListener("event", (event) => {
+          const data: unknown = JSON.parse(
+            (event as MessageEvent<string>).data,
+          );
+          const type = (data as { type?: unknown }).type;
+          if (type === "check.started") {
+            record.__started += 1;
+            record.__checking = true;
+          } else if (results.includes(type as string))
+            record.__checking = false;
+        });
+      }
+    };
     const note = (mode: string | null | undefined) => {
       if (mode && seen.at(-1) !== mode) seen.push(mode);
     };
@@ -59,30 +95,62 @@ function recordModes(page: Page) {
   });
 }
 
-const modes = (page: Page) =>
-  page.evaluate(() => (window as unknown as { __modes: string[] }).__modes);
-
 /**
- * Where Pip's Idle stands in the record while Pip is at rest; -1 while it
- * isn't.
+ * The record so far: Pip's modes, the check.started frames counted, and
+ * whether a run is out by the stream.
  */
-const restingAt = (page: Page) =>
+const recorded = (page: Page) =>
   page.evaluate(() => {
-    const seen = (window as unknown as { __modes: string[] }).__modes;
-    return seen.at(-1) === "idle" ? seen.length - 1 : -1;
+    const record = window as unknown as {
+      __modes: string[];
+      __started: number;
+      __checking: boolean;
+    };
+    return {
+      modes: [...record.__modes],
+      started: record.__started,
+      checking: record.__checking,
+    };
   });
 
-/** Idle, Thinking while the run is out, then the line's state and Idle. */
-async function checkTo(page: Page, state: string, run: () => Promise<void>) {
+/**
+ * Idle, Thinking while the run is out, then the line's state and Idle.
+ * `asked`: the learner asked for the run (Check again), so a check.started
+ * must come. Otherwise the result is a change's, and the run that brings it
+ * may be the file watcher's, which Pip thinks through (254 D25), or the
+ * step's timed poll, which happened to read the change first and which Pip
+ * never thinks for (ticket 352).
+ */
+async function checkTo(
+  page: Page,
+  state: string,
+  run: () => Promise<void>,
+  asked: boolean,
+) {
   // A run the file watcher started on an earlier change (the folder renamed
   // away or back) may still be out: let it finish, so the record is read
   // from Pip at rest. The record runs from the page's opening, so a run the
   // watcher starts only after this rest is read in it too (335). Either run
   // may be the one Pip thinks through: the watcher's run on a change is a
   // Check run too (254 D25), so either shows the mode follows the run.
-  let rest = -1;
+  // At rest means no run out by the stream as well as Idle on Pip: a
+  // check.started can land before Pip's element turns to Thinking.
+  let rest = { at: -1, started: 0 };
   await expect
-    .poll(async () => (rest = await restingAt(page)), { timeout: 30_000 })
+    .poll(
+      async () => {
+        const now = await recorded(page);
+        rest = {
+          at:
+            now.modes.at(-1) === "idle" && !now.checking
+              ? now.modes.length - 1
+              : -1,
+          started: now.started,
+        };
+        return rest.at;
+      },
+      { timeout: 30_000 },
+    )
     .toBeGreaterThanOrEqual(0);
   await run();
   await expect(card(page)).toHaveAttribute("data-state", state, {
@@ -91,12 +159,16 @@ async function checkTo(page: Page, state: string, run: () => Promise<void>) {
   // Idle again after Thinking, read from the record: the watcher may start
   // one more run for the same change once this one has ended, so Pip's mode
   // now could be that run's Thinking. The record from `rest` on starts at
-  // Idle, so only a Thinking and the Idle after it are left to find.
+  // Idle, so only a Thinking and the Idle after it are left to find, and
+  // only when a run started: with none, Pip never thought (the poll's pass).
   await expect
     .poll(
       async () => {
-        const seen = (await modes(page)).slice(rest);
+        const now = await recorded(page);
+        const seen = now.modes.slice(rest.at);
         const thought = seen.indexOf("thinking");
+        if (now.started === rest.started)
+          return asked ? "no check.started" : thought === -1;
         return thought !== -1 && seen.indexOf("idle", thought) !== -1;
       },
       { timeout: 30_000 },
@@ -129,21 +201,27 @@ test("Pip's mode follows b-1's step states on a real play: rest, checking, Not y
       timeout: 30_000,
     });
 
-    await checkTo(page, "not-yet", checkAgain(page));
+    await checkTo(page, "not-yet", checkAgain(page), true);
 
     // The folder the Check runs in is gone: it cannot run.
     const project = join(copy.dir, "project");
     renameSync(project, `${project}.away`);
-    await checkTo(page, "broken", checkAgain(page));
+    await checkTo(page, "broken", checkAgain(page), true);
     renameSync(`${project}.away`, project);
 
     // The correction alone passes it: the run the file watcher starts on
-    // the change is a Check run, so Pip thinks for it too (254 D25). No
-    // Check again: the run may pass first, and the button becomes Next step.
-    await checkTo(page, "ok", () => {
-      copy.write("project/practice/b-1/onboarding.md", CORRECTED);
-      return Promise.resolve();
-    });
+    // the change is a Check run, so Pip thinks for it too (254 D25), unless
+    // the timed poll read the change first. No Check again: the run may pass
+    // first, and the button becomes Next step.
+    await checkTo(
+      page,
+      "ok",
+      () => {
+        copy.write("project/practice/b-1/onboarding.md", CORRECTED);
+        return Promise.resolve();
+      },
+      false,
+    );
     await expect(
       bar(page).getByRole("button", { name: "Next step" }),
     ).toBeVisible();
