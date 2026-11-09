@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, test, vi } from "vitest";
+import { GUIDE_REPO } from "../pages/fetch";
 import { InlineText } from "./InlineText";
 
 const open = vi.fn();
@@ -41,10 +42,48 @@ test("a repository page opens in the page panel, at its heading", async () => {
   render(
     <InlineText text="Read [Lesson 2](beginner/02-first-session.md#why) first." />,
   );
-  const link = screen.getByRole("link", { name: "Lesson 2" });
-  expect(link).not.toHaveAttribute("target");
-  await user.click(link);
+  await user.click(screen.getByRole("link", { name: "Lesson 2" }));
   expect(open).toHaveBeenCalledWith("beginner/02-first-session.md", "why");
+});
+
+// The app serves no page at a repository path, so the href is the page on
+// GitHub, for a new tab or a middle click (263).
+test("a repository page's href is the page on GitHub at main, in a new tab", () => {
+  render(
+    <InlineText text="[lesson 2](docs/beginner/02-permission-modes-and-plan-mode.md#worked-example) and [memory](docs/beginner/05-project-memory.md)" />,
+  );
+  const lesson = screen.getByRole("link", { name: "lesson 2" });
+  expect(lesson).toHaveAttribute(
+    "href",
+    `${GUIDE_REPO}/blob/main/docs/beginner/02-permission-modes-and-plan-mode.md#worked-example`,
+  );
+  expect(lesson).toHaveAttribute("target", "_blank");
+  expect(lesson).toHaveAttribute("rel", "noopener noreferrer");
+  expect(screen.getByRole("link", { name: "memory" })).toHaveAttribute(
+    "href",
+    `${GUIDE_REPO}/blob/main/docs/beginner/05-project-memory.md`,
+  );
+});
+
+test("a click with a modifier key or another button leaves the page to the browser", () => {
+  render(<InlineText text="[Lesson 2](beginner/02-first-session.md)" />);
+  const link = screen.getByRole("link", { name: "Lesson 2" });
+  for (const init of [
+    { metaKey: true },
+    { ctrlKey: true },
+    { shiftKey: true },
+    { altKey: true },
+    { button: 1 },
+  ]) {
+    const event = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      ...init,
+    });
+    link.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  }
+  expect(open).not.toHaveBeenCalled();
 });
 
 test("other links and HTML stay text", () => {

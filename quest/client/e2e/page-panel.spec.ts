@@ -13,6 +13,7 @@ import {
   indexWarmupI1,
   overviewAt,
   playingB3,
+  playingWith,
   snapshotOf,
   warmupB2,
   watching,
@@ -286,6 +287,79 @@ test("Tab stays inside, Escape closes and focus returns", async ({
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(open).toBeFocused();
+});
+
+// A card's link to a Guide page (263): the app serves no page at its
+// repository path, so a plain click opens the panel and the href is the page
+// on GitHub, which a new tab or a click with a modifier key opens.
+test.describe("a card's link to a Guide page", () => {
+  const PERMISSIONS = "docs/beginner/02-permission-modes-and-plan-mode.md";
+  const cardLink = playingWith({
+    beat: {
+      decidedBy: "check",
+      lines: [
+        {
+          kind: "say",
+          text: `Approve with Yes, as in [lesson 2](${PERMISSIONS}#worked-example).`,
+        },
+      ],
+    },
+  });
+  const link = (page: Page) => page.getByRole("link", { name: "lesson 2" });
+
+  test("a plain click opens the page in the panel", async ({
+    page,
+    context,
+  }) => {
+    await servePages(context);
+    await openAt(page, "/#/lesson/b-1/step", cardLink);
+    const before = page.url();
+    await link(page).click();
+    await expect(
+      page.getByRole("dialog", { name: titleOf(PERMISSIONS) }),
+    ).toBeVisible();
+    expect(page.url()).toBe(before);
+    expect(context.pages()).toEqual([page]);
+  });
+
+  test("its href opens the page on GitHub, and a Ctrl or Cmd click leaves it to the browser", async ({
+    page,
+    context,
+  }) => {
+    await servePages(context);
+    // The test browser resolves no other host: GitHub is answered here.
+    await context.route(`${GUIDE}/**`, (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<title>GitHub</title>",
+      }),
+    );
+    await openAt(page, "/#/lesson/b-1/step", cardLink);
+    const target = `${GUIDE}/blob/main/${PERMISSIONS}#worked-example`;
+    await expect(link(page)).toHaveAttribute("href", target);
+    await expect(link(page)).toHaveAttribute("target", "_blank");
+    await expect(link(page)).toHaveAttribute("rel", "noopener noreferrer");
+    // What "Open link in new tab" loads: GitHub, not a path on the app.
+    const tab = await context.newPage();
+    await tab.goto((await link(page).getAttribute("href")) ?? "");
+    expect(tab.url()).toBe(target);
+    await expect(tab).toHaveTitle("GitHub");
+    await tab.close();
+    // A modifier click is the browser's to handle: the app neither stops it
+    // nor opens the panel. The test browser opens no tab for one, so the
+    // tab above stands in for it.
+    await page.evaluate(() => {
+      window.addEventListener("click", (event) => {
+        document.body.dataset.prevented = String(event.defaultPrevented);
+      });
+    });
+    await link(page).click({ modifiers: ["ControlOrMeta"] });
+    await expect(page.locator("body")).toHaveAttribute(
+      "data-prevented",
+      "false",
+    );
+    await expect(page.getByRole("dialog")).toBeHidden();
+  });
 });
 
 test.describe("which page Read the full lesson opens", () => {
