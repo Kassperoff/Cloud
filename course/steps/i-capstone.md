@@ -239,6 +239,7 @@ needs: [jq python3]
 - verify: git-clean samples/
 - watching: git status samples
 - say: Make sure nothing in samples/ changed.
+- say: Done when git status lists nothing in samples/.
 - hint: "The tests depend on the exact files there"
 - beat: self
 - skill: use-mcp

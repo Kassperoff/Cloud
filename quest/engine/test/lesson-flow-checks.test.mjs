@@ -950,7 +950,23 @@ test("the grammar: warm-ups in their own section, a fresh check names its file, 
         ),
         "demo",
       ),
-    /a "Done when" say line needs a check beat or a beat that reads a file/,
+    /a "Done when" say line needs a check beat, a beat that reads a file or a git-clean beat/,
+  );
+  // A git-clean beat that names paths has no Check line of its own, so its
+  // step file names one (d264-icap's "What the step asks for").
+  const clean = parseLesson(
+    DEMO_B2.replace(
+      "- verify: check all",
+      "- verify: git-clean samples/\n- say: Done when nothing in samples/ changed.",
+    ),
+    "demo",
+  );
+  assert.equal(
+    clean.steps
+      .flatMap((x) => x.beats)
+      .find((x) => x.verify.kind === "git-clean")
+      .lines.find((x) => x.doneWhen)?.text,
+    "Done when nothing in samples/ changed.",
   );
   // A path git status is asked about is named as git names it, from the
   // work folder: ./, / and .. would match nothing it lists.

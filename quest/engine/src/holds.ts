@@ -72,7 +72,43 @@ function oneRow(s: string, max = 60) {
   return max === Infinity ? row : strip(cut(row, max));
 }
 
-// A list row that keeps both of its ends: its first word (a log line's
+// A matched line as one screen row that shows what matched: a row too wide
+// keeps the part around the match, with … at each end it cut, so a flag
+// late in a long line still shows (d264-icap's T6 cut `.mcp.json`'s args at
+// `"--isolated", …`, before the `--no-usage-statistics` its beat matched).
+// A match that fits the start of the row shows as oneRow cuts it.
+function matchRow(s: string, re: RegExp, max = 60) {
+  const row = oneRow(s, Infinity);
+  const m = re.exec(row);
+  if (!m || width(row) <= max) return oneRow(s, max);
+  const parts = graphemes(row);
+  const wide = (a: number, b: number) =>
+    parts.slice(a, b).reduce((w, g) => w + cellWidth(g), 0);
+  const start = graphemes(row.slice(0, m.index)).length;
+  const end = start + graphemes(m[0]).length;
+  if (wide(0, end) <= max - 1) return oneRow(s, max);
+  // The match in the middle of the room the two … leave; a match wider than
+  // that room shows from its start.
+  let a = Math.max(
+    0,
+    start - Math.max(0, Math.floor((max - 2 - wide(start, end)) / 2)),
+  );
+  if (wide(a, parts.length) <= max - 1) {
+    while (a > 0 && wide(a - 1, parts.length) <= max - 1) a--;
+    return `…${parts.slice(a).join("")}`;
+  }
+  const lead = a > 0 ? "…" : "";
+  let b = a;
+  let room = max - 1 - lead.length;
+  for (; b < parts.length; b++) {
+    const g = cellWidth(parts[b] as string);
+    if (g > room) break;
+    room -= g;
+  }
+  return `${lead}${parts.slice(a, b).join("")}…`;
+}
+
+// A list row that keeps both of its ends:its first word (a log line's
 // reason) and as much of its end (a path's file name) as fits, joined by …,
 // so two rows that differ only near the end still read apart (d264-i2's
 // `path_glob_match /…/.claude/rules/cli.md`).
@@ -170,7 +206,7 @@ export function checkEvidenceOf(
   if (line) {
     const re = new RegExp(line);
     const hit = text.split(/\r?\n/).find((l) => re.test(l));
-    if (hit !== undefined) return oneRow(hit);
+    if (hit !== undefined) return matchRow(hit, re);
   }
   if (!path?.toLowerCase().endsWith(".txt")) return firstOf(text);
   const lines = text
@@ -249,7 +285,7 @@ export function judge(
       text,
       verify.kind === "no-match" && from === buf.length ? 0 : from,
     ).find((l) => re.test(l));
-    const line = hit === undefined ? null : oneRow(hit);
+    const line = hit === undefined ? null : matchRow(hit, re);
     // A matched line shows without a list's trailing comma (r27 E12).
     if (verify.kind === "match")
       return line === null
