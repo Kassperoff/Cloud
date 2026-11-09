@@ -51,9 +51,13 @@ export interface FolderCancelAction {
   type: "folder.cancel";
 }
 
-/** On from a done beat. */
+/**
+ * On from a done beat. `beat` is the beat it was pressed on; one no longer
+ * on the card changes nothing (264).
+ */
 export interface StepContinueAction {
   type: "step.continue";
+  beat: BeatKey;
 }
 
 /** Back one beat, or to the step before. */
@@ -61,9 +65,13 @@ export interface StepBackAction {
   type: "step.back";
 }
 
-/** Skip an optional step. */
+/**
+ * Skip an optional step. `beat` is the beat it was pressed on; one no longer
+ * on the card changes nothing (264).
+ */
 export interface StepSkipAction {
   type: "step.skip";
+  beat: BeatKey;
 }
 
 /** Go back to the earlier step the snapshot's back offer names. */
@@ -88,9 +96,13 @@ export interface AnswerTypeAction {
   text: string;
 }
 
-/** The Learner says a self-checked beat is done. */
+/**
+ * The Learner says a self-checked beat is done. `beat` is the beat it was
+ * pressed on; one no longer on the card changes nothing (264).
+ */
 export interface StepMarkDoneAction {
   type: "step.markDone";
+  beat: BeatKey;
 }
 
 /** "The session has ended", on a beat that waits for it. */

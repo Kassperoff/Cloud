@@ -23,6 +23,7 @@ import {
   w3,
   WORK,
   checkRun,
+  onBeat,
 } from "./scripted.mjs";
 
 const results = (heard) =>
@@ -287,7 +288,7 @@ test("a late Check again for a passed beat changes nothing on the beat after it"
   adapters.checks.calls[1].resolve(item(true));
   await turn();
   assert.equal(host.snapshot().lesson.beat.status, "done");
-  host.dispatch({ type: "step.continue" });
+  host.dispatch(onBeat(host, "step.continue"));
   await turn();
   assert.equal(host.snapshot().lesson.step.id, "Y1");
   adapters.checks.calls.at(-1).resolve(item(false));

@@ -28,14 +28,14 @@ const SAMPLES: Record<QuestActionType, QuestAction> = {
     to: "practice-copy",
   },
   "folder.cancel": { type: "folder.cancel" },
-  "step.continue": { type: "step.continue" },
+  "step.continue": { type: "step.continue", beat: "b-2:Y4:0" },
   "step.back": { type: "step.back" },
-  "step.skip": { type: "step.skip" },
+  "step.skip": { type: "step.skip", beat: "b-2:Y4:0" },
   "step.revisit": { type: "step.revisit" },
   "answer.pick": { type: "answer.pick", option: 0 },
   "answer.reveal": { type: "answer.reveal" },
   "answer.type": { type: "answer.type", text: "plan mode" },
-  "step.markDone": { type: "step.markDone" },
+  "step.markDone": { type: "step.markDone", beat: "b-2:Y4:0" },
   "session.ended": { type: "session.ended" },
   "check.run": { type: "check.run", beat: "b-2:Y4:0" },
   "hint.next": { type: "hint.next" },
@@ -147,16 +147,26 @@ describe("the schema", () => {
     ["a string take", { type: "hint.takeExact", take: "yes" }],
     ["an empty beat", { type: "check.run", beat: "" }],
     ["a beat of 201 characters", { type: "check.run", beat: "b".repeat(201) }],
+    ["an empty Continue beat", { type: "step.continue", beat: "" }],
+    ["an empty Skip beat", { type: "step.skip", beat: "" }],
+    ["an empty Done beat", { type: "step.markDone", beat: "" }],
+    [
+      "a Done beat of 201 characters",
+      { type: "step.markDone", beat: "b".repeat(201) },
+    ],
   ])("%s out of bounds is refused", async (_, action) => {
     const kit = await actionKit();
     await expectInvalid(await kit.post(at(kit.host, action)));
   });
 
-  test("a check.run with no beat is refused", async () => {
-    const kit = await actionKit();
-    await expectInvalid(await kit.post(at(kit.host, { type: "check.run" })));
-    expect(kit.dispatched).toEqual([]);
-  });
+  test.each(["check.run", "step.continue", "step.skip", "step.markDone"])(
+    "a %s with no beat is refused",
+    async (type) => {
+      const kit = await actionKit();
+      await expectInvalid(await kit.post(at(kit.host, { type })));
+      expect(kit.dispatched).toEqual([]);
+    },
+  );
 
   test("a missing instance is refused", async () => {
     const kit = await actionKit();
@@ -366,6 +376,18 @@ describe("no action names a command, a script or a file", () => {
     // server checks and the host only looks at.
     expect(JSON.stringify(SAMPLES)).not.toMatch(/command|script/i);
   });
+
+  test.each(["step.continue", "step.skip", "step.markDone"])(
+    "%s carries only the beat it was pressed on (264)",
+    (type) => {
+      expect(
+        Object.keys(
+          actionSchema.options.find((o) => o.shape.type.value === type)
+            ?.shape ?? {},
+        ),
+      ).toEqual(["type", "beat"]);
+    },
+  );
 
   test("check.run carries only the beat it was pressed on: a Check is chosen by the Lesson", () => {
     expect(

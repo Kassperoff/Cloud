@@ -325,4 +325,46 @@ describe("the step card's beat", () => {
     ]);
     expect(sent()[1]).toBe(card()?.getAttribute("data-beat"));
   });
+
+  // Ticket 264: a press from a tab showing an earlier beat must not move
+  // the beat after it, so Continue and I've done it name theirs.
+  test("Continue and I've done it send the beat they were pressed on", async () => {
+    const user = userEvent.setup();
+    const index = playing.beat?.index ?? -1;
+    const done = playingWith({
+      beat: { status: "done", decidedBy: "check", last: false },
+    });
+    const self = playingWith({
+      beat: {
+        index: index + 1,
+        kind: "self",
+        status: "waiting",
+        decidedBy: "learner",
+        fail: null,
+      },
+    });
+    const page = renderConnected("/lesson/b-1/step", snapshotOf(done));
+    const card = () => document.querySelector("[data-step-card]");
+    const pressed = () =>
+      page.posts
+        .filter((a) => a.type === "step.continue" || a.type === "step.markDone")
+        .map((a) => [a.type, "beat" in a ? a.beat : null]);
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(pressed()).toEqual([
+      ["step.continue", card()?.getAttribute("data-beat")],
+    ]);
+    act(() => {
+      page.send(snapshotOf(self, { revision: 2 }));
+    });
+    await user.click(
+      await screen.findByRole("button", { name: "I've done it" }),
+    );
+    const key = (i: number) =>
+      `${playing.id}:${playing.step?.id ?? ""}:${String(i)}`;
+    expect(pressed()).toEqual([
+      ["step.continue", key(index)],
+      ["step.markDone", key(index + 1)],
+    ]);
+    expect(pressed()[1]?.[1]).toBe(card()?.getAttribute("data-beat"));
+  });
 });

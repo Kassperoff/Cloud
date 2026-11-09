@@ -5,7 +5,7 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { fakeClock } from "../src/fake.ts";
 import { course } from "../../engine/test/drive.mjs";
-import { fakeHost } from "./scripted.mjs";
+import { fakeHost, onBeat } from "./scripted.mjs";
 
 const b1 = course.find((l) => l.id === "b-1");
 // b-1 saved at its last beat, a self beat: one step.markDone finishes it.
@@ -73,7 +73,7 @@ test("each input carries the host's wall clock: a finished step's Mastery is sav
   await host.open();
   assert.deepEqual(host.snapshot().learner.mastery, {});
   host.dispatch({ type: "lesson.open", lesson: "b-1" });
-  host.dispatch({ type: "step.markDone" });
+  host.dispatch(onBeat(host, "step.markDone"));
   const mastery = host.snapshot().learner.mastery;
   const skill = b1.content.steps.find((x) => x.id === "C").skill;
   assert.deepEqual(Object.keys(mastery), [skill]);
@@ -106,7 +106,7 @@ test("reading Your card writes no save; a finished step's save carries its done 
   for (const save of saves.slice(before))
     assert.ok(!(save.lessons["b-1"]?.done ?? []).includes("C"));
   assert.deepEqual(host.snapshot().learner.card, reads[0]);
-  host.dispatch({ type: "step.markDone" });
+  host.dispatch(onBeat(host, "step.markDone"));
   assert.ok(saves.length > opened);
   assert.ok(saves.at(-1).lessons["b-1"].done.includes("C"));
   const grown = host.snapshot().learner.card;

@@ -244,7 +244,8 @@ export const finishedBefore = (id, lessons = course) =>
 // A saved file, as the store keeps it: the welcome seen.
 export const save = (fields = {}) => ({ format: 1, welcomed: true, ...fields });
 
-// The beat's key, as the card's data-beat renders it: what check.run carries.
+// The beat's key, as the card's data-beat renders it: what check.run,
+// step.continue, step.skip and step.markDone carry.
 export const keyOf = (state) => beatKeyOf(state);
 
 // ---- the driver -----------------------------------------------------------------
@@ -320,14 +321,15 @@ export function driver({
     start: (help = "planned") => act("lesson.start", { help }),
     restart: (lesson = state.lesson) => act("lesson.restart", { lesson }),
     next: () => act("lesson.next"),
-    cont: () => act("step.continue"),
+    cont: (beat) => act("step.continue", { beat: beat ?? beatKeyOf(state) }),
     back: () => act("step.back"),
-    skip: () => act("step.skip"),
+    skip: (beat) => act("step.skip", { beat: beat ?? beatKeyOf(state) }),
     revisit: () => act("step.revisit"),
     pick: (option) => act("answer.pick", { option }),
     reveal: () => act("answer.reveal"),
     type: (text) => act("answer.type", { text }),
-    markDone: () => act("step.markDone"),
+    markDone: (beat) =>
+      act("step.markDone", { beat: beat ?? beatKeyOf(state) }),
     ended: () => act("session.ended"),
     run: (beat) => act("check.run", { beat: beat ?? beatKeyOf(state) }),
     hint: () => act("hint.next"),

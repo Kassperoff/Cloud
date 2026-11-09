@@ -54,6 +54,10 @@ import { renderConnected } from "../../test/connected";
 import FAILURES from "../../test/beginner-failures.json";
 import { WAITING_LINE } from "./Welcome";
 
+// The beat key a press on `lesson`'s card carries, as its data-beat renders it.
+const keyOf = (lesson: PlayingLesson) =>
+  `${lesson.id}:${lesson.step?.id ?? ""}:${String(lesson.beat?.index)}`;
+
 // The app's own words on the slice's screens. Any other text must be a
 // quote from the snapshot (Copy rules): a word about Claude Code is never
 // the app's.
@@ -697,9 +701,9 @@ describe("Lesson workspace", () => {
     page.send(snapshotOf(self, { revision: 3 }));
     await user.click(screen.getByRole("button", { name: "I've done it" }));
     expect(page.posts).toEqual([
-      { type: "step.continue" },
-      { type: "step.continue" },
-      { type: "step.markDone" },
+      { type: "step.continue", beat: keyOf(done) },
+      { type: "step.continue", beat: keyOf(doneLast) },
+      { type: "step.markDone", beat: keyOf(self) },
     ]);
     await user.click(screen.getByRole("button", { name: "Back" }));
     expect(page.posts.at(-1)).toEqual({ type: "step.revisit" });
@@ -1220,7 +1224,7 @@ describe("Lesson workspace, every step (246)", () => {
       await screen.findByRole("button", { name: "The session has ended" }),
     );
     expect(page.posts).toEqual([
-      { type: "step.markDone" },
+      { type: "step.markDone", beat: keyOf(learnerBeat) },
       { type: "session.ended" },
     ]);
   });
@@ -1397,7 +1401,7 @@ describe("Lesson workspace, every step (246)", () => {
       screen.getByRole("button", { name: "The session has ended" }),
     );
     expect(page.posts).toEqual([{ type: "session.ended" }]);
-    expect(page.posts).not.toContainEqual({ type: "step.markDone" });
+    expect(page.posts.map((a) => a.type)).not.toContain("step.markDone");
   });
 
   test("bold and links in a say and a why render through InlineText; a watched command ticks", () => {

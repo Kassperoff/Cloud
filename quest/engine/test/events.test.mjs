@@ -230,7 +230,7 @@ test("a late Check again for a beat the watcher passed leaves the next beat unto
   d.send({ ...runStart(eff), changed: true });
   d.send(checkResult(eff, checkItems(d.state, true)));
   assert.deepEqual(types(d.last), ["check.passed", "step.completed"]);
-  d.act("step.continue");
+  d.cont();
   respond(d, pending(d, "stamp"));
   assert.equal(stepOf(d.state).id, "Y1");
   const card = () => [d.state.beat.status, d.state.beat.run];

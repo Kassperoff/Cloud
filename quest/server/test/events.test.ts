@@ -18,6 +18,7 @@ import {
   INSTANCE,
   actionKit,
   at,
+  onBeat,
   questHost,
   type ActionKit,
 } from "./action-kit.ts";
@@ -59,20 +60,17 @@ async function toFirstEvent(kit: ActionKit) {
     { type: "lesson.start", help: "planned" },
   ])
     expect((await kit.post(at(kit.host, action))).status).toBe(200);
-  expect((await kit.post(at(kit.host, { type: "step.markDone" }))).status).toBe(
-    200,
-  );
+  expect(
+    (await kit.post(at(kit.host, onBeat(kit.host, "step.markDone")))).status,
+  ).toBe(200);
   return kit.host.revision();
 }
 
 // Two events this instance holds: `${INSTANCE}.1` and `${INSTANCE}.2`.
 async function twoEvents(kit: ActionKit) {
   await toFirstEvent(kit);
-  for (const action of [
-    { type: "step.continue" },
-    { type: "answer.pick", option: 0 },
-  ])
-    await kit.post(at(kit.host, action));
+  await kit.post(at(kit.host, onBeat(kit.host, "step.continue")));
+  await kit.post(at(kit.host, { type: "answer.pick", option: 0 }));
   expect(kit.host.eventsAfter(`${INSTANCE}.1`)?.map((e) => e.id)).toEqual([
     `${INSTANCE}.2`,
   ]);
@@ -297,7 +295,9 @@ describe("live", () => {
       await kit.post(at(kit.host, action));
     const reader = await open(kit);
     await reader.next();
-    const response = await kit.post(at(kit.host, { type: "step.markDone" }));
+    const response = await kit.post(
+      at(kit.host, onBeat(kit.host, "step.markDone")),
+    );
     expect(response.status).toBe(200);
     const { revision } = (await response.json()) as { revision: number };
     const [first, second] = await reader.frames(2);
@@ -334,7 +334,9 @@ describe("live", () => {
     const reader = await open(kit);
     await reader.next();
     await kit.post(at(kit.host, { type: "lesson.start", help: "planned" }));
-    const response = await kit.post(at(kit.host, { type: "step.markDone" }));
+    const response = await kit.post(
+      at(kit.host, onBeat(kit.host, "step.markDone")),
+    );
     const { revision } = (await response.json()) as { revision: number };
     const frames = await reader.frames(2);
     expect(frames.map((f) => f.event)).toEqual(["snapshot", "event"]);

@@ -82,7 +82,7 @@ test('a check step waits, says "not yet" only when something changed, and turns 
   });
   d.send({ type: "check", lesson: "b-1", items: [missing] });
   assert.equal(d.state.beat.status, "waiting");
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   assert.equal(
     stepOf(d.state).id,
     "W3",
@@ -1764,7 +1764,7 @@ test("review fixes: a stuck option may say what the learner saw in the app's own
 test("real-run fixes: a question starts with nothing picked, and h says when hints open", () => {
   const d = at("W5");
   // dropped: T-cursor nothing picked at first, T-toast pickFirst on a stray enter
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   assert.equal(d.state.beat.status, "waiting", "going on answers nothing");
   d.pick(0);
   assert.equal(

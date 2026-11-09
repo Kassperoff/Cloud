@@ -45,6 +45,14 @@ function atW6() {
     events,
     send,
     lesson: () => project(state).lesson,
+    /** I've done it on the beat on the card, with its key (264). */
+    done: () => {
+      const lesson = project(state).lesson as PlayingLesson;
+      send({
+        type: "step.markDone",
+        beat: `${lesson.id}:${lesson.step?.id ?? ""}:${String(lesson.beat?.index)}`,
+      });
+    },
     /** The phase, and the step on screen with its tier while playing. */
     step: () => {
       const lesson = project(state).lesson as PlayingLesson;
@@ -58,7 +66,7 @@ type Driver = ReturnType<typeof atW6>;
 const toStepDown = (): Driver => {
   const d = atW6();
   expect(d.step()).toEqual(["playing", "W6", "guided"]);
-  d.send({ type: "step.markDone" });
+  d.done();
   return d;
 };
 
@@ -108,7 +116,7 @@ describe("Lesson 1's first Step-down", () => {
     d.send({ type: "stepDown.accept" });
     d.send({ type: "step.back" });
     expect(d.step()).toEqual(["playing", "W6", "guided"]);
-    d.send({ type: "step.markDone" });
+    d.done();
     expect(d.step()).toEqual(["playing", "Y1", "hinted"]);
     expect(d.events.filter((t) => t === "stepDown.reached")).toHaveLength(1);
   });
@@ -120,7 +128,7 @@ describe("Lesson 1's first Step-down", () => {
     d.send({ type: "stepDown.back" });
     expect(d.step()).toEqual(["playing", "W6", "guided"]);
     expect(d.state.progress["b-1"]?.levels).toEqual([]);
-    d.send({ type: "step.markDone" });
+    d.done();
     expect(d.lesson().phase).toBe("step-down");
     expect(d.events.filter((t) => t === "stepDown.reached")).toHaveLength(2);
   });

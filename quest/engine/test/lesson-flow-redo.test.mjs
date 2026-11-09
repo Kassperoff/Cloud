@@ -41,6 +41,7 @@ import {
   whileRunsBox,
   whileRunsOf,
   whileRunsOpen,
+  keyOf,
 } from "./drive.mjs";
 import { project } from "../src/index.ts";
 // The app's words a beat's fail hint or evidence is built from (status.ts
@@ -640,6 +641,8 @@ test("optional steps: the card says when to skip, x skips, and skipping changes 
     "the ease landed on Y2",
   );
   // dropped: T-render the card's C.optional line, the key bar's x, fitsBoth
+  // A Skip pressed on another beat than the one on the card does nothing (264).
+  d.refused("step.skip", { beat: "b-2:Y1:0" });
   d.skip();
   assert.equal(stepOf(d.state).id, "C", "step.skip goes on to the next step");
   const p = d.state.progress["b-2"];
@@ -650,7 +653,7 @@ test("optional steps: the card says when to skip, x skips, and skipping changes 
     [["look-around"], ["look-around"]],
   );
   // step.skip does nothing on a step that is not optional.
-  d.refused("step.skip");
+  d.refused("step.skip", { beat: keyOf(d.state) });
   assert.equal(stepOf(d.state).id, "C");
   // Skipping the last step completes the lesson.
   const last = onPartsB2("D2", { done: ["W1", "Y1", "Y2", "C", "D1"] });
@@ -1715,7 +1718,7 @@ test("r27 E3: only space ticks a self beat, so the enter that goes on from a ste
   const d = onB2At(text);
   assert.equal(beatOf(d.state).verify.kind, "self");
   // The enter that goes on from a step: no step.continue on an unticked beat.
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   assert.deepEqual(
     [stepOf(d.state).id, d.state.pos.beat, d.state.beat.status],
     ["W1", 0, "waiting"],
@@ -1940,8 +1943,8 @@ test("r27 E3, done-labels: only space answers a beat with a done-label, a git-cl
   );
   // The git-clean beat: neither going on nor a tick ends it or asks git.
   let n = d.effects.length;
-  d.refused("step.continue");
-  d.refused("step.markDone");
+  d.refused("step.continue", { beat: keyOf(d.state) });
+  d.refused("step.markDone", { beat: keyOf(d.state) });
   assert.ok(!d.state.beat.ended, "no word on a done-label beat");
   assert.deepEqual(
     d.effects.slice(n).filter((e) => e.type === "git"),
@@ -1973,7 +1976,7 @@ test("r27 E3, done-labels: only space answers a beat with a done-label, a git-cl
   );
   // dropped: T-render the key bar offers space
   // dropped: T-input enter sends no step.markDone on a none beat with a done-label (flow's key map)
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   assert.deepEqual(
     [d.state.pos.beat, d.state.beat.status],
     [2, "waiting"],

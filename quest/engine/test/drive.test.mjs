@@ -19,6 +19,7 @@ import {
   stateAt,
   struggles,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 const beginner = course.filter((l) => l.level === "beginner");
@@ -44,7 +45,7 @@ test("playUntil finishes every Beginner fixture lesson, and every effect is the 
 test("refused passes on a no-op and fails on a change", () => {
   const d = driver();
   assert.equal(d.state.phase, "overview");
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   d.refused("answer.pick", { option: 0 });
   assert.throws(() => d.refused("lesson.start"), /changed the state/);
   assert.equal(d.state.phase, "playing");
