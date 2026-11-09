@@ -1,6 +1,6 @@
 # Keep a session on track
 
-<sub>**Beginner** · Lesson 4 of 5 · about 25 minutes · Needs: [Your first change, from request to commit](03-first-change.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
+<sub>**Beginner** · Lesson 4 of 5 · about 25 minutes · Needs: [Your first change, from request to commit](03-first-change.md) · Verified against Claude Code v2.1.311 (stable) on 2026-11-09</sub>
 
 ## Goal
 

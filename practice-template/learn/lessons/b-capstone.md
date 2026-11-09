@@ -3,7 +3,7 @@ lesson: b-capstone
 title: "Beginner capstone: fix a reported bug, from plan to commit"
 source: docs/beginner/capstone.md
 source-commit: 676831f
-stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
+stamp: "Verified against Claude Code v2.1.311 (stable) on 2026-11-09"
 page: https://github.com/wesammustafa/Claude-Code-Quest/blob/main/docs/beginner/capstone.md
 stuck: https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=b-capstone
 next: i-1

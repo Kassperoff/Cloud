@@ -1,6 +1,6 @@
 # Choose who approves what: permission modes and plan mode
 
-<sub>**Beginner** · Lesson 2 of 5 · about 25 minutes · Needs: [Install, sign in and look around](01-install-and-look-around.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
+<sub>**Beginner** · Lesson 2 of 5 · about 25 minutes · Needs: [Install, sign in and look around](01-install-and-look-around.md) · Verified against Claude Code v2.1.311 (stable) on 2026-11-09</sub>
 
 ## Goal
 
