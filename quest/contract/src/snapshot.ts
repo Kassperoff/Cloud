@@ -276,8 +276,11 @@ export interface StepView {
   warmup: { from: string; explainer: boolean } | null;
 }
 
-/** A line of the beat, in the page's words or the app's. */
-export interface BeatLine {
+/** A line of the beat: words, in the page's or the app's, or a table. */
+export type BeatLine = BeatTextLine | BeatTable;
+
+/** A line of the beat's words, in the page's words or the app's. */
+export interface BeatTextLine {
   kind: "say" | "goal" | "do" | "run" | "expect" | "note" | "rule" | "after";
   /** For `run`, the command for this platform with its paths filled in. */
   text: string;
@@ -285,6 +288,16 @@ export interface BeatLine {
   watched?: boolean;
   /** A "Done when" line, which an evidence line replaces once done. */
   doneWhen?: boolean;
+}
+
+/** A table of the page: its header's cells and its rows' cells, the page's words. */
+export interface BeatTable {
+  kind: "table";
+  header: string[];
+  rows: string[][];
+  text?: undefined;
+  watched?: undefined;
+  doneWhen?: undefined;
 }
 
 /** A code block the beat explains: the window it shows of the block. */

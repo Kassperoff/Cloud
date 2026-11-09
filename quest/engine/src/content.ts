@@ -35,7 +35,19 @@ export interface CodeLine {
   doneWhen?: undefined;
   leadIn?: undefined;
 }
-export type Line = TextLine | CodeLine;
+// A table of the page: its header's cells, then each row's, every cell the
+// page's words. `text` holds the rows, one a line, cells joined by " | ".
+export interface TableLine {
+  key: "table";
+  text: string;
+  quoted: true;
+  header: string[];
+  rows: string[][];
+  win?: undefined;
+  doneWhen?: undefined;
+  leadIn?: undefined;
+}
+export type Line = TextLine | CodeLine | TableLine;
 // A bottom line: the exact command, its Windows line and its lead-in.
 export interface Bottom {
   key?: undefined;
@@ -238,13 +250,15 @@ export interface CheckModule {
   items: readonly { text: string }[];
 }
 // What a parse is given: the manifest, the Checks and the probes, and where
-// to send each piece of the page it shows.
+// to send each piece of the page it shows. A table row carries its table's
+// header cells, or null when it is the header row.
 export type PageText = (
   | { kind: "quote"; text: string }
   | {
       kind: "block";
       lines: string[];
     }
+  | { kind: "row"; cells: string[]; header: string[] | null }
 ) & { line: number; heading: string; from: string | null };
 export interface ParseContext {
   manifest?: Manifest;
@@ -398,6 +412,11 @@ export const BEAT_KINDS: ReadonlySet<string> = new Set([
 // above it, such as "In the practice template:", drawn above its command
 // wherever the bottom line shows; at most one a bottom line. Like `win`, it
 // goes under its bottom line, before or after that line's `win`.
+// `table` (ticket 263): one row of a table on the page, its cells quoted and
+// split by " | ", as `- table: "Where" | "Who gets it"`. A beat's
+// consecutive table lines are one table: the first is the page table's
+// header row, and each line after it one of that table's rows, with as many
+// cells. A beat shows at most one table.
 export const BEAT_KEYS: Readonly<Record<string, boolean | null>> = {
   where: false,
   verify: false,
@@ -422,6 +441,7 @@ export const BEAT_KEYS: Readonly<Record<string, boolean | null>> = {
   win: true,
   expect: true,
   note: true,
+  table: true,
   rule: true,
   after: true,
   why: true,
@@ -607,6 +627,18 @@ export const COMMANDS_URL = `${GUIDE}/blob/main/docs/reference/commands.md`;
 export const indexUrl = (level: LevelId) =>
   `${GUIDE}/blob/main/docs/${level}/README.md`;
 
+// A table line's cells, `"<cell>" | "<cell>"`, or null when it is not one.
+// Each cell is the page's words, not empty, and a cell holding a quote mark
+// beside a pipe is a split written some other way.
+export function tableCells(raw: string): string[] | null {
+  const inner = raw.match(/^"(.*)"$/)?.[1];
+  if (inner === undefined) return null;
+  const cells = inner.split('" | "');
+  return cells.every((cell) => cell.trim() && !/"\s*\||\|\s*"/.test(cell))
+    ? cells
+    : null;
+}
+
 function value(raw: string) {
   const q = raw.match(/^"(.*)"$/);
   return q
@@ -678,6 +710,8 @@ export function parseLesson(
     card: [],
   };
   const cardLines: number[] = [];
+  // Each table's header line, so a table with no rows can name it.
+  const tableLines = new Map<TableLine, number>();
   const needLines: { quote: string; line: number }[] = [];
   let section: string | null = null;
   let step: DraftStep | null = null;
@@ -690,7 +724,10 @@ export function parseLesson(
   // Where a quote or block on line n sits, for onPageText: only a warm-up's
   // from line points it at another page.
   const pageText = (
-    entry: { kind: "quote"; text: string } | { kind: "block"; lines: string[] },
+    entry:
+      | { kind: "quote"; text: string }
+      | { kind: "block"; lines: string[] }
+      | { kind: "row"; cells: string[]; header: string[] | null },
     n: number,
   ) => {
     const inStep = (section === "steps" || section === "warm-up") && step;
@@ -775,7 +812,9 @@ export function parseLesson(
     const key = must(kv[1], `${file}: a key`);
     const raw = must(kv[2], `${file}: a value`);
     const v = value(raw.trim());
-    if (v.quoted) pageText({ kind: "quote", text: v.text }, i);
+    // A table line is its cells, each sent on its own below.
+    if (v.quoted && key !== "table")
+      pageText({ kind: "quote", text: v.text }, i);
     if (section === "intro") {
       if (!(key in INTRO_KEYS)) fail(i, `unknown intro key ${key}`);
       if (!v.quoted) fail(i, `${key} must be a quote of the lesson`);
@@ -877,6 +916,7 @@ export function parseLesson(
       continue;
     }
     if (!(key in BEAT_KEYS)) fail(i, `unknown beat key ${key}`);
+    const previousKey = beat.lastKey;
     if (key !== "win" && key !== "lead-in") beat.lastKey = key;
     if (BEAT_KEYS[key] === true && !v.quoted)
       fail(i, `${key} must be a quote of the lesson`);
@@ -888,6 +928,40 @@ export function parseLesson(
       const last = beat.options.at(-1);
       if (!last) fail(i, "a because line with no option above it");
       last.because = v.text;
+    } else if (key === "table") {
+      const cells = tableCells(raw.trim());
+      if (!cells)
+        fail(
+          i,
+          'a table line is its cells, each the page\'s words in quotes, split by " | ": "<cell>" | "<cell>"',
+        );
+      const table = beat.lines.at(-1);
+      if (previousKey === "table" && table?.key === "table") {
+        if (cells.length !== table.header.length)
+          fail(
+            i,
+            `a table row with ${String(cells.length)} cells under a header with ${String(table.header.length)}`,
+          );
+        table.rows.push(cells);
+        table.text += `\n${cells.join(" | ")}`;
+        pageText({ kind: "row", cells, header: table.header }, i);
+      } else {
+        if (beat.lines.some((l) => l.key === "table"))
+          fail(
+            i,
+            "a second table on one beat: a table's rows are consecutive table lines",
+          );
+        const header: TableLine = {
+          key: "table",
+          text: cells.join(" | "),
+          quoted: true,
+          header: cells,
+          rows: [],
+        };
+        beat.lines.push(header);
+        tableLines.set(header, i);
+        pageText({ kind: "row", cells, header: null }, i);
+      }
     } else if (key === "win") {
       // A Windows line replaces the command line just above it: a run line,
       // a code block, or the last bottom line when that came last.
@@ -1031,6 +1105,9 @@ export function parseLesson(
       // The rest of BEAT_KEYS, camel-cased: verify is its line's text here.
     } else (beat as Record<string, unknown>)[camel(key)] = v.text;
   }
+  for (const [table, at] of tableLines)
+    if (!table.rows.length)
+      fail(at, "a table with a header and no rows under it");
   // A payoff that is no `can` line would flag nothing on screen.
   if (payoffLine !== null) {
     const payoff = must(lesson.intro.payoff, `${file}: a payoff`);

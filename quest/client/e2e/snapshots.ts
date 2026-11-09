@@ -1398,6 +1398,46 @@ export const richCopy = playingWith({
   },
 });
 
+/** A page table between a goal and a note, as b-5 W2 shows its memory table (263). */
+export const pageTable = playingWith({
+  beat: {
+    decidedBy: "learner",
+    lines: [
+      {
+        kind: "goal",
+        text: "Where you write an instruction decides who gets it",
+      },
+      {
+        kind: "table",
+        header: ["Where", "What goes in it", "Who gets it"],
+        rows: [
+          [
+            "`./CLAUDE.md`",
+            "Commands, conventions, layout",
+            "The team: commit it",
+          ],
+          [
+            "`~/.claude/CLAUDE.md`",
+            "Your habits for every project",
+            "Only you",
+          ],
+          [
+            "`./CLAUDE.local.md`",
+            "Your notes for this project",
+            "Only you: add it to `.gitignore`",
+          ],
+          [
+            "Auto memory",
+            "Notes Claude saves, such as what you ask it to remember",
+            "Only you, on this machine",
+          ],
+        ],
+      },
+      { kind: "note", text: "After the table." },
+    ],
+  },
+});
+
 // ---- Questions, warm-ups and hints (247) -------------------------------------
 
 /** The fields every question beat shares: no Check, decided by its answer. */

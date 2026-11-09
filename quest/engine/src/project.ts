@@ -543,9 +543,12 @@ function beatView(s: EngineState): BeatView {
   const lines: BeatLine[] = [];
   let code: CodeView | null = null;
   for (const l of beat.lines) {
-    // A guess shows only its notes before the question.
-    if (beat.kind === "predict" && l.key !== "note") continue;
-    if (l.key === "run") {
+    // A guess shows only its notes and tables before the question.
+    if (beat.kind === "predict" && l.key !== "note" && l.key !== "table")
+      continue;
+    if (l.key === "table")
+      lines.push({ kind: "table", header: l.header, rows: l.rows });
+    else if (l.key === "run") {
       if (hide) continue;
       // A command ticks only where the app watched the Learner run it: a
       // done beat that looks at a file, or the live .practice/ tick.

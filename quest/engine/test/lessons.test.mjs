@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { lessons } from "../../../practice-template/checks/lessons/index.mjs";
 import { PROBES, probeError } from "../src/probes.ts";
-import { STAMP, checkLessons } from "../src/lessons.ts";
+import { STAMP, checkLessons, pageTables } from "../src/lessons.ts";
 
 /** Escape every RegExp special character, backslash included. */
 const escapeRegExp = (text) => text.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
@@ -144,6 +144,65 @@ describe("the lesson test on this repo", () => {
     expect(problems.join("\n")).toContain(`quotes "${quote}"`);
   });
 
+  test("a table's rows match a page table cell by cell, its header the page's header", () => {
+    const file = stepFile("b-5");
+    const page = pageOf("b-5");
+    const header = '- table: "Where" | "What goes in it" | "Who gets it"';
+    const row =
+      '- table: "`~/.claude/CLAUDE.md`" | "Your habits for every project" | "Only you"';
+    const lineOf = (line) => repo.stepFiles[file].split("\n").indexOf(line) + 1;
+    const heading =
+      "W2 | Worked example step 2 of 6 | Cut it to what Claude can't infer";
+    expect(lineOf(header)).toBeGreaterThan(0);
+    expect(lineOf(row)).toBeGreaterThan(0);
+    expect(check(repo).rows).toBeGreaterThanOrEqual(5);
+    const withRow = (from, to) => ({
+      ...repo,
+      stepFiles: {
+        ...repo.stepFiles,
+        [file]: repo.stepFiles[file].replace(from, to),
+      },
+    });
+    // Whitespace inside a cell is flattened, as for a quote.
+    expect(
+      added(withRow(row, row.replace("Your habits", "Your  habits"))),
+    ).toEqual([]);
+    // Cells from two rows, each on the page, are no row of it.
+    expect(
+      added(withRow(row, row.replace('"Only you"', '"The team: commit it"'))),
+    ).toEqual([
+      `${file}:${lineOf(row)}: shows the table row "\`~/.claude/CLAUDE.md\` | Your habits for every project | The team: commit it" (${heading}), which is not a row of a table with that header in ${page}.`,
+    ]);
+    expect(added(withRow(header, header.replace('"Where"', '"File"')))).toEqual(
+      [
+        `${file}:${lineOf(header)}: shows the table header "File | What goes in it | Who gets it" (${heading}), which is not a table's header in ${page}.`,
+        // Its rows are then under a header no page table has.
+        ...[1, 2, 3, 4].map((k) =>
+          expect.stringMatching(
+            new RegExp(
+              `^${escapeRegExp(file)}:${lineOf(header) + k}: shows the table row .*, which is not a row of a table with that header`,
+            ),
+          ),
+        ),
+      ],
+    );
+    // Changing one cell on the page takes the row off it.
+    const pages = {
+      ...repo.pages,
+      [page]: repo.pages[page].replace(
+        "| Your habits for every project |",
+        "| Your habits for each project |",
+      ),
+    };
+    expect(added({ ...repo, pages })).toEqual([
+      expect.stringMatching(
+        new RegExp(
+          `^${escapeRegExp(file)}:${lineOf(row)}: shows the table row "\`~/\\.claude/CLAUDE\\.md\` \\| Your habits for every project \\| Only you"`,
+        ),
+      ),
+    ]);
+  });
+
   test("re-stamping a page without its step file fails it", () => {
     const page = pageOf("i-3");
     const stamp = repo.pages[page].match(STAMP)[0];
@@ -249,6 +308,44 @@ describe("the lesson test on this repo", () => {
       `course/steps/i-5.md:${at}: Press p for the lesson page.`,
     ]);
     expect(appWords(planted('"Press p for the lesson page."'))).toEqual([]);
+  });
+});
+
+describe("a page's tables", () => {
+  test("are read as GitHub reads them: outer pipes, escaped pipes, outside fences", () => {
+    const page = [
+      "Some text | with a pipe.",
+      "",
+      "| Where | Who |",
+      "|---|:--:|",
+      "| `a \\| b` | Only you |",
+      "| Auto memory |  The team  |",
+      "After the table.",
+      "",
+      "```",
+      "| In | a block |",
+      "|---|---|",
+      "| not | a table |",
+      "```",
+      "",
+      "Key | Value",
+      "--- | ---",
+      "one | two",
+      "",
+      "| Three | cells | here |",
+      "|---|---|",
+      "| no | table | here |",
+    ].join("\n");
+    expect(pageTables(page)).toEqual([
+      {
+        header: ["Where", "Who"],
+        rows: [
+          ["`a | b`", "Only you"],
+          ["Auto memory", "The team"],
+        ],
+      },
+      { header: ["Key", "Value"], rows: [["one", "two"]] },
+    ]);
   });
 });
 

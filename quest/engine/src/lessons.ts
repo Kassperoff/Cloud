@@ -5,6 +5,8 @@
 // - each double-quoted value is in its page, whitespace-flattened;
 // - each code block equals a block of its page line for line, and every
 //   block closes (the parser fails one that doesn't);
+// - each table row equals, cell by cell and whitespace-flattened, its page
+//   table's header row, or a row of a page table with that header;
 // - the step file's stamp equals its page's Stamp;
 // - each "step N of M" heading of a Worked example, Your turn, The task or
 //   Tear down counts the page's numbered steps under that heading;
@@ -15,7 +17,7 @@
 // Pure: callers supply the manifest, the step files, the pages, the Check
 // modules and the probes. It returns the problems, each naming its file and
 // line (none when everything matches), and how many step files, quotes,
-// code blocks and warm-ups from another page it compared.
+// code blocks, table rows and warm-ups from another page it compared.
 import {
   coursePath,
   must,
@@ -113,6 +115,41 @@ export function fencedBlocks(markdown: string) {
   return blocks;
 }
 
+// A table row's cells, as GitHub reads them: the outer pipes dropped, split
+// at every pipe a backslash doesn't escape, each cell trimmed.
+const rowCells = (line: string) =>
+  line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/(?<!\\)\|$/, "")
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.replace(/\\\|/g, "|").trim());
+// A table's delimiter row, such as `|---|:--:|`.
+const DELIMITER = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/;
+
+// The page's tables outside its fenced blocks: each one's header cells and
+// its rows' cells. A table is a header line, a delimiter row with as many
+// cells, then every line up to the first blank line or line with no pipe.
+export function pageTables(markdown: string) {
+  const tables: { header: string[]; rows: string[][] }[] = [];
+  const lines = outsideFences(markdown);
+  for (let i = 0; i < lines.length; i++) {
+    const line = must(lines[i], "a page line");
+    const delimiter = lines[i + 1]?.trim() ?? "";
+    if (!line.includes("|") || !DELIMITER.test(delimiter)) continue;
+    const header = rowCells(line);
+    if (rowCells(delimiter).length !== header.length) continue;
+    const rows: string[][] = [];
+    for (i += 2; i < lines.length; i++) {
+      const row = must(lines[i], "a page line");
+      if (!row.trim() || !row.includes("|")) break;
+      rows.push(rowCells(row));
+    }
+    tables.push({ header, rows });
+  }
+  return tables;
+}
+
 // The numbered steps at the top level under the page's `## <part>` heading.
 export function stepCount(markdown: string, part: string) {
   let inside = false;
@@ -124,17 +161,42 @@ export function stepCount(markdown: string, part: string) {
   return count;
 }
 
-// A page a step file may quote: its text flattened, and its blocks.
+// A page a step file may quote: its text flattened, its blocks, and its
+// tables with every cell flattened.
 interface Source {
   path: string;
   text: string;
   body: string;
   blocks: string[][];
+  tables: { header: string[]; rows: string[][] }[];
 }
 
 function source(path: string, raw: string): Source {
   const text = raw.replace(/\r\n?/g, "\n");
-  return { path, text, body: flat(text), blocks: fencedBlocks(text) };
+  const tables = pageTables(text).map((table) => ({
+    header: table.header.map(flat),
+    rows: table.rows.map((row) => row.map(flat)),
+  }));
+  return { path, text, body: flat(text), blocks: fencedBlocks(text), tables };
+}
+
+// A step file's table row against the page's tables, cell by cell with the
+// whitespace flattened: a header row must be some table's header, and any
+// other row a row of a table with that header.
+function rowMatches(
+  page: Source,
+  cells: readonly string[],
+  header: readonly string[] | null,
+) {
+  const same = (a: readonly string[], b: readonly string[]) =>
+    sameLines(a.map(flat), b);
+  return header === null
+    ? page.tables.some((table) => same(cells, table.header))
+    : page.tables.some(
+        (table) =>
+          same(header, table.header) &&
+          table.rows.some((row) => same(cells, row)),
+      );
 }
 
 export function checkLessons({
@@ -155,10 +217,17 @@ export function checkLessons({
     manifest = parseManifest(value, MANIFEST);
   } catch (error) {
     const problem = error instanceof Error ? error.message : String(error);
-    return { problems: [problem], lessons: 0, quotes: 0, blocks: 0, from: 0 };
+    return {
+      problems: [problem],
+      lessons: 0,
+      quotes: 0,
+      blocks: 0,
+      rows: 0,
+      from: 0,
+    };
   }
   const problems: string[] = [];
-  const compared = { lessons: 0, quotes: 0, blocks: 0, from: 0 };
+  const compared = { lessons: 0, quotes: 0, blocks: 0, rows: 0, from: 0 };
   // Every page a step file may quote: each Lesson's own, by its id, and each
   // Level index, by `<level>-index`, the name a warm-up's from line gives it.
   const sources = new Map<string, Source>();
@@ -266,9 +335,20 @@ export function checkLessons({
     for (const piece of shown) {
       const page = piece.from === null ? own : sources.get(piece.from);
       if (!page) continue;
-      compared[piece.kind === "quote" ? "quotes" : "blocks"] += 1;
+      compared[
+        piece.kind === "quote"
+          ? "quotes"
+          : piece.kind === "block"
+            ? "blocks"
+            : "rows"
+      ] += 1;
       const at = `${file}:${String(piece.line)}`;
-      if (piece.kind === "quote") {
+      if (piece.kind === "row") {
+        if (!rowMatches(page, piece.cells, piece.header))
+          problems.push(
+            `${at}: shows the table ${piece.header ? "row" : "header"} "${piece.cells.join(" | ")}" (${piece.heading}), which is not ${piece.header ? "a row of a table with that header" : "a table's header"} in ${page.path}.`,
+          );
+      } else if (piece.kind === "quote") {
         if (!page.body.includes(flat(piece.text)))
           problems.push(
             `${at}: quotes "${piece.text}" (${piece.heading}), which is not in ${page.path}.`,

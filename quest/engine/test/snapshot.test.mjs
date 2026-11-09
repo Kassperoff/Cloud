@@ -933,6 +933,55 @@ test("playing: live b-4 shows the rewind fallback and git restore on the card, W
   assert.ok(goal.includes("file editing tool, not a shell command"), goal);
 });
 
+test("a page table reaches the card whole, in its place among the beat's lines (263)", () => {
+  const content = liveCourse.find((l) => l.id === "b-5").content;
+  const w2 = content.steps.find((s) => s.id === "W2");
+  const beat = w2.beats.findIndex((b) =>
+    b.lines.some((l) => l.key === "table"),
+  );
+  assert.ok(beat >= 0, "b-5 W2 shows a table");
+  const d = driver({
+    course: liveCourse,
+    saved: save({
+      lessons: {
+        ...finishedBefore("b-5", liveCourse),
+        "b-5": {
+          step: "W2",
+          beat,
+          warm: [],
+          done: ["W1"],
+          fingerprint: fingerprint(content),
+        },
+      },
+    }),
+  });
+  d.open("b-5");
+  assert.equal(stepOf(d.state).id, "W2");
+  const lines = view(d).beat.lines;
+  assert.deepEqual(
+    lines.map((l) => l.kind),
+    ["goal", "table"],
+  );
+  assert.deepEqual(lines[1], {
+    kind: "table",
+    header: ["Where", "What goes in it", "Who gets it"],
+    rows: [
+      ["`./CLAUDE.md`", "Commands, conventions, layout", "The team: commit it"],
+      ["`~/.claude/CLAUDE.md`", "Your habits for every project", "Only you"],
+      [
+        "`./CLAUDE.local.md`",
+        "Your notes for this project",
+        "Only you: add it to `.gitignore`",
+      ],
+      [
+        "Auto memory",
+        "Notes Claude saves, such as what you ask it to remember",
+        "Only you, on this machine",
+      ],
+    ],
+  });
+});
+
 test("a beat's Windows note shows on native Windows only", () => {
   for (const win32 of [false, true]) {
     const d = at("b-1", { step: "C", beat: 0 }, { facts: { win32 } });

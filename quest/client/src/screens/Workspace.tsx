@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type {
   BeatKey,
   BeatLine,
+  BeatTable,
   BeatView,
   HintView,
   LessonId,
@@ -475,6 +476,48 @@ const LINE_CLASS: Partial<Record<BeatLine["kind"], string>> = {
   say: "text-muted",
 };
 
+/**
+ * A table of the page, with its header row. Its columns share the card's
+ * width and every cell wraps, a long code span too, so the card never
+ * scrolls sideways.
+ */
+function PageTable({ table }: { table: BeatTable }) {
+  return (
+    <table
+      data-line-kind="table"
+      className="w-full table-fixed border-collapse text-left text-sm wrap-anywhere"
+    >
+      <thead>
+        <tr className="border-b border-line-2">
+          {table.header.map((cell, i) => (
+            <th
+              key={i}
+              scope="col"
+              className="px-2 py-1.5 align-bottom font-semibold first:pl-0 last:pr-0"
+            >
+              <InlineText text={cell} />
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {table.rows.map((row, r) => (
+          <tr key={r} className="border-b border-line last:border-b-0">
+            {row.map((cell, i) => (
+              <td
+                key={i}
+                className="px-2 py-1.5 align-top first:pl-0 last:pr-0"
+              >
+                <InlineText text={cell} />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 /** One line of the beat, by its kind. */
 function Line({
   line,
@@ -483,6 +526,7 @@ function Line({
   line: BeatLine;
   where: string | null;
 }): ReactNode {
+  if (line.kind === "table") return <PageTable table={line} />;
   if (line.kind === "run")
     return (
       <Command

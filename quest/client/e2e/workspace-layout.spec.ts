@@ -2,10 +2,17 @@
 // action bar never covers the step card's last line, with Back, Skip and a
 // long done-label on the bar. Also the Tear down eyebrow and its first line,
 // Back's description and Skip's when line, on routed snapshots.
+// At phone width a page table wraps inside the card (263).
 import type { Page } from "@playwright/test";
 import { connected, expect, test } from "./live.ts";
 import { KEY_NAMES } from "./play.ts";
-import { course, offersBoth, snapshotOf, tearDown } from "./snapshots.ts";
+import {
+  course,
+  offersBoth,
+  pageTable,
+  snapshotOf,
+  tearDown,
+} from "./snapshots.ts";
 
 test.use({ manualStream: true });
 
@@ -50,6 +57,41 @@ for (const width of [720, 1440]) {
       };
     });
     expect(seen).toEqual({ card: true, offers: true, overflow: false });
+  });
+}
+
+for (const width of [320, 390]) {
+  test(`at ${String(width)} px a page table wraps inside the card, with no sideways scroll (263)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 740 });
+    await openAt(page, snapshotOf(pageTable));
+    const table = page.getByRole("table");
+    await expect(table).toBeVisible();
+    await expect(table.getByRole("columnheader")).toHaveCount(3);
+    const seen = await page.evaluate(() => {
+      const table = document.querySelector("table");
+      const card = document.querySelector("[data-step-card]");
+      const t = table?.getBoundingClientRect();
+      const c = card?.getBoundingClientRect();
+      const cells = [...document.querySelectorAll("th, td")];
+      return {
+        inCard: t !== undefined && c !== undefined && t.right <= c.right,
+        tableScrolls: table !== null && table.scrollWidth > table.clientWidth,
+        cellOverflows: cells.some(
+          (cell) => cell.scrollWidth > cell.clientWidth,
+        ),
+        overflow:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      };
+    });
+    expect(seen).toEqual({
+      inCard: true,
+      tableScrolls: false,
+      cellOverflows: false,
+      overflow: false,
+    });
   });
 }
 

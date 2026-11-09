@@ -1522,6 +1522,93 @@ test("a code block shows on a do, ask or self beat, and names no folder a run li
   }
 });
 
+// ---- tables (ticket 263) ------------------------------------------------------
+// `- table: "<cell>" | "<cell>"`: a beat's consecutive table lines are one
+// table of the page, its header row first.
+const HEADER = '- table: "Where" | "Who gets it"';
+const tableOf = (lines) =>
+  parseLesson(withCode(lines), "b-2.md").steps[0].beats[0].lines;
+
+test("a beat's consecutive table lines are one table, its header row first, kept in the beat's order", () => {
+  const shown = tableOf([
+    '- note: "Before it."',
+    HEADER,
+    '- table: "`./CLAUDE.md`" | "The team: commit it"',
+    '- table: "Auto memory" | "Only you, on this machine"',
+    '- note: "After it."',
+  ]);
+  assert.deepEqual(
+    shown.map((l) => l.key),
+    ["note", "table", "note"],
+  );
+  const table = shown[1];
+  assert.deepEqual(table.header, ["Where", "Who gets it"]);
+  assert.deepEqual(table.rows, [
+    ["`./CLAUDE.md`", "The team: commit it"],
+    ["Auto memory", "Only you, on this machine"],
+  ]);
+  assert.equal(table.quoted, true);
+  assert.equal(
+    table.text,
+    "Where | Who gets it\n`./CLAUDE.md` | The team: commit it\nAuto memory | Only you, on this machine",
+  );
+});
+
+test("a table line sends each row to the lesson test, under its table's header", () => {
+  const pieces = [];
+  parseContent(
+    withCode([HEADER, '- table: "Auto memory" | "Only you"']),
+    "b-2.md",
+    {
+      manifest,
+      checks: lessons,
+      probes: { PROBES, probeError },
+      onPageText: (piece) => pieces.push(piece),
+    },
+  );
+  const rows = pieces.filter((p) => p.kind === "row");
+  assert.deepEqual(
+    rows.map((p) => [p.cells, p.header]),
+    [
+      [["Where", "Who gets it"], null],
+      [
+        ["Auto memory", "Only you"],
+        ["Where", "Who gets it"],
+      ],
+    ],
+  );
+  // No cell, and no whole table line, goes as a quote of its own.
+  assert.ok(
+    !pieces.some((p) => p.kind === "quote" && /Who gets it/.test(p.text)),
+  );
+});
+
+test("a table is quoted cells, as many in each row as in its header, with rows under it, one to a beat", () => {
+  const bad = [
+    [["- table: Where | Who gets it"], /b-2\.md:\d+: table must be a quote/],
+    [['- table: "Where" | Who gets it'], /table must be a quote/],
+    [['- table: "Where" | Who "gets" it"'], /a table line is its cells/],
+    [['- table: "Where" |"Who gets it"'], /a table line is its cells/],
+    [['- table: "Where" | ""'], /a table line is its cells/],
+    [
+      [HEADER, '- table: "Auto memory"'],
+      /a table row with 1 cells under a header with 2/,
+    ],
+    [[HEADER], /b-2\.md:\d+: a table with a header and no rows under it/],
+    [
+      [
+        HEADER,
+        '- table: "a" | "b"',
+        '- note: "Between."',
+        '- table: "c" | "d"',
+      ],
+      /a second table on one beat/,
+    ],
+  ];
+  for (const [lines, error] of bad)
+    assert.throws(() => tableOf(lines), error, lines.join("\n"));
+});
+
 // ---- back lines (ticket 192) --------------------------------------------------
 // `- back: <step id> <why>` on a ladder block or a beat: where the step's
 // state comes from. b-2's after item is its one use so far; 195 and 196 add
