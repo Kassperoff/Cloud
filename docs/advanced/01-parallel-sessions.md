@@ -127,7 +127,7 @@ If the first item fails, run `git check-ignore -v :/.claude/worktrees/x` in your
 
 - [Isolate subagents with worktrees](https://code.claude.com/docs/en/worktrees#isolate-subagents-with-worktrees): `isolation: worktree` in a subagent's frontmatter gives each run a checkout of its own.
 - [Message your other Claude Code sessions](https://code.claude.com/docs/en/cross-session-messaging): let the sessions in your worktrees pass findings to each other.
-- [Run multiple Claude sessions](https://code.claude.com/docs/en/best-practices#run-multiple-claude-sessions): the Writer/Reviewer pattern, where a fresh session reviews what another one wrote.
+- [Run sessions in parallel](https://code.claude.com/docs/en/best-practices#run-sessions-in-parallel): a second session as an independent reviewer of what another one wrote.
 
 ---
 

@@ -723,7 +723,7 @@ export const overviews = [
       payoff:
         "review a change well enough to catch what it gets wrong before it is committed",
       why: "Decide whether a teammate's patch does only what it says, and fix it before it's committed.",
-      read: "[Give Claude a way to verify its work](https://code.claude.com/docs/en/best-practices#give-claude-a-way-to-verify-its-work): why a test beats a summary.",
+      read: "[Give Claude a check to run](https://code.claude.com/docs/en/best-practices#give-claude-a-check-to-run): why a test beats a summary.",
     },
     staircase: {
       planned: [
@@ -1011,7 +1011,7 @@ export const overviews = [
       ],
       payoff: "decide which memory file each instruction belongs in",
       why: "Sort four notes so each reaches only the people it's for, and no false one is committed.",
-      read: "[Write an effective CLAUDE.md](https://code.claude.com/docs/en/best-practices#write-an-effective-claude-md): what to put in it and what to leave out.",
+      read: "[Keep CLAUDE.md short](https://code.claude.com/docs/en/best-practices#keep-claude-md-short): what to put in it and what to leave out.",
     },
     staircase: {
       planned: [
