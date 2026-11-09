@@ -2782,7 +2782,7 @@ export const overviews = [
     resumable: false,
     check: [
       "`scripts/review-staged.sh` is committed and executable",
-      "its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`",
+      "its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, restricts the tools to those three, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`",
       "it pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn't call Claude when nothing is staged",
       "`.practice/a-4-result.json` holds a run that succeeded within your cap",
     ],
@@ -3283,7 +3283,7 @@ export const overviews = [
       "`.practice/a-capstone-worktrees.txt` lists two worktrees of this repository whose commits split from each other, and both changes are in your branch",
       "a committed script in `.claude/workflows/` has a literal `export const meta`, with a `name` and a `description`, as its first statement, and calls `agent()` at least twice",
       "`scripts/review-staged.sh` is committed and executable",
-      "its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`",
+      "its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, restricts the tools to those three, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`",
       "it pipes the staged diff in, saves the JSON where its argument says, prints the result, exits non-zero when the run fails, and doesn't call Claude when nothing is staged",
       "`.practice/a-capstone-run.json` holds a run that succeeded within your cap",
       "a committed workflow runs `anthropics/claude-code-action` on `pull_request`, pinned to a release or a commit SHA, in automation mode, with its credential from a secret and none in the file, a read-only job token, `--max-turns` of at most 10, an `--allowedTools` list without unrestricted `Bash` and `timeout-minutes` of at most 30",
