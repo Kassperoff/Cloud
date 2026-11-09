@@ -663,6 +663,26 @@ test("match: done once a line matches, front matter included, and the evidence i
   assert.equal(done.evidence, "disable-model-invocation: true");
 });
 
+// spec: verify.value.match
+test("match: a matched line too wide for a row keeps the part around the match (d264-icap T6)", () => {
+  const args =
+    '    "args": ["-y", "chrome-devtools-mcp@1.10.1", "--isolated", "--no-usage-statistics", "--no-performance-crux"],\n';
+  const late = onReading("match .mcp.json no-performance-crux");
+  const tail = tryNow(late, ".mcp.json", `{\n${args}}\n`).evidence;
+  assert.ok(tail.startsWith("…"), tail);
+  assert.ok(tail.endsWith('"--no-performance-crux"]'), tail);
+  const mid = onReading("match .mcp.json no-usage-statistics");
+  const middle = tryNow(mid, ".mcp.json", `{\n${args}}\n`).evidence;
+  assert.ok(middle.includes("--no-usage-statistics"), middle);
+  for (const row of [tail, middle]) assert.ok([...row].length <= 60, row);
+  // A match within the row's first columns is cut as before.
+  const early = onReading("match .mcp.json chrome-devtools-mcp@");
+  assert.equal(
+    tryNow(early, ".mcp.json", `{\n${args}}\n`).evidence,
+    '"args": ["-y", "chrome-devtools-mcp@1.10.1", "--isolated", …',
+  );
+});
+
 // spec: verify.value.no-match
 test("no-match: done once the file is there and no line matches; the not-yet line names the line that does", () => {
   // was learn-flow:2157
