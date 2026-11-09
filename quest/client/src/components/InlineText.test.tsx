@@ -24,6 +24,19 @@ test("shows backticks as code and double stars as bold", () => {
   );
 });
 
+test("code inside a link's words shows as code, not backticks", () => {
+  const { container } = render(
+    <p>
+      <InlineText text="Download the partial [`tdd` skill](https://example.com/SKILL.md) and the [`code-reviewer`](beginner/README.md)." />
+    </p>,
+  );
+  const links = screen.getAllByRole("link");
+  expect(links[0]).toHaveAccessibleName("tdd skill");
+  expect(links[0]?.querySelector("code")).toHaveTextContent("tdd");
+  expect(links[1]?.querySelector("code")).toHaveTextContent("code-reviewer");
+  expect(container.querySelector("p")?.textContent).not.toContain("`");
+});
+
 test("a web link opens in a new tab", () => {
   render(
     <InlineText text="See [the docs](https://code.claude.com/docs/en/overview)." />,
