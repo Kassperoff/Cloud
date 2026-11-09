@@ -293,7 +293,7 @@ needs: [jq gh]
 - narrow "is committed as": Is the committed path the script file itself, not a link?
 - hint: "Then write `scripts/review-staged.sh` to lesson 4's criteria"
 
-### its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`
+### its `claude -p` call asks for JSON in `dontAsk` mode, allows only `Read`, `Grep` and `Glob`, restricts the tools to those three, with no hook or MCP server, caps turns at 10 or fewer, and has the prompt right after `-p`
 - narrow "found no Git Bash": Is Git for Windows installed where you run the check?
 - narrow "first: the check runs the committed script": Is the script committed?
 - narrow "has Windows line ends": Was the script saved with Windows line ends?

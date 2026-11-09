@@ -279,7 +279,7 @@ export function committedScript(script, guide = 'the lesson\'s Your turn') {
  */
 export function scriptCall(script) {
   return {
-    text: `its \`claude -p\` call asks for JSON in \`dontAsk\` mode, allows only \`Read\`, \`Grep\` and \`Glob\`, with no hook or MCP server, caps turns at ${CAP_MAX} or fewer, and has the prompt right after \`-p\``,
+    text: `its \`claude -p\` call asks for JSON in \`dontAsk\` mode, allows only \`Read\`, \`Grep\` and \`Glob\`, restricts the tools to those three, with no hook or MCP server, caps turns at ${CAP_MAX} or fewer, and has the prompt right after \`-p\``,
     check(repo) {
       const run = scenario(repo, script, 'review');
       const skipped = notRun(run, script);
