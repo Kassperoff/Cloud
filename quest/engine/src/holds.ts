@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 import { isGlob, type ReadVerify } from "./content.ts";
 import { C } from "./copy.ts";
-import { cut, graphemes, isEmoji, strip } from "./text.ts";
+import { cellWidth, cut, graphemes, isEmoji, strip, width } from "./text.ts";
 
 // What a reading beat's verify came to: a pass with the evidence it shows,
 // or the not-yet line a miss gets.
@@ -70,6 +70,28 @@ function oneRow(s: string, max = 60) {
     .map((g) => (isEmoji(g) && emoji++ ? "*" : g))
     .join("");
   return max === Infinity ? row : strip(cut(row, max));
+}
+
+// A list row that keeps both of its ends: its first word (a log line's
+// reason) and as much of its end (a path's file name) as fits, joined by …,
+// so two rows that differ only near the end still read apart (d264-i2's
+// `path_glob_match /…/.claude/rules/cli.md`).
+function bothEnds(s: string, max = 60) {
+  const row = oneRow(s, Infinity);
+  if (width(row) <= max) return row;
+  const parts = graphemes(row);
+  const space = parts.indexOf(" ");
+  const keep = space > 0 && space < max / 3 ? space + 1 : Math.floor(max / 3);
+  const head = parts.slice(0, keep).join("");
+  let room = max - width(head) - 1;
+  const tail: string[] = [];
+  for (let i = parts.length - 1; i >= keep; i--) {
+    const g = parts[i] as string;
+    if (cellWidth(g) > room) break;
+    room -= cellWidth(g);
+    tail.unshift(g);
+  }
+  return `${head}…${tail.join("")}`;
 }
 
 // The line a file shows of itself: its first line that says something, not
@@ -149,7 +171,7 @@ export function checkEvidenceOf(
   const rows = lines
     .slice(end + 1)
     .filter((l) => !OPENS.includes(l))
-    .map((l) => oneRow(l))
+    .map((l) => bothEnds(l))
     .filter(Boolean);
   const shown = rows.slice(0, EVIDENCE_ROWS);
   const last = shown.pop();
