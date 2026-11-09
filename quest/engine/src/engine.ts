@@ -1754,7 +1754,8 @@ function onCheck(
       st.status === "fail" &&
       wanted.some((it) => it.slow && it.text === st.fail?.item)
     ) {
-      st.slowWait = true;
+      // Its words stay the Not yet's too, as its line does: not the
+      // slow-wait words, which would say everything else passes (263).
       return;
     }
     if (st.baseline === undefined) st.baseline = null;
