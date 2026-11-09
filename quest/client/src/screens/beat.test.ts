@@ -89,6 +89,18 @@ describe("primaryAction", () => {
       "I've read it",
     ],
     [
+      "the Learner's beat with a label in the Learner's words",
+      { decidedBy: "learner", doneLabel: "it's committed" },
+      "step.markDone",
+      "It's committed",
+    ],
+    [
+      "a session with a label in the Learner's words",
+      { decidedBy: "session", doneLabel: "claude is running" },
+      "session.ended",
+      "Claude is running",
+    ],
+    [
       "a session",
       { decidedBy: "session", doneLabel: "The session has ended" },
       "session.ended",

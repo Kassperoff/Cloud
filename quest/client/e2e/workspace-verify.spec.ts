@@ -545,7 +545,7 @@ test('session: b-2 "Confirm no edit yet" watches the copy, lists what it saw on 
     await openAt(page, copy);
     await expect(heading(page)).toHaveText("Confirm no edit yet");
     const ended = bar(page).getByRole("button", {
-      name: "it says nothing to commit",
+      name: "It says nothing to commit",
     });
     // No session needs to end here: the plan stays on screen.
     await expect(page.locator("[data-says-words]")).toHaveText(
