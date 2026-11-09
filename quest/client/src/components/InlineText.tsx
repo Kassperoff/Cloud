@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { githubBlob } from "../pages/fetch";
 import { usePagePanel } from "../pages/PagePanel";
 
 export const CODE =
@@ -8,9 +9,13 @@ export const CODE =
 // text, so the Guide's words reach the page as text nodes, never as HTML.
 const SPAN = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)\s]+\))/;
 const LINK = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
-// A repository page, such as `beginner/02-first-session.md#why`: it opens
-// in the page panel. Anything with a scheme, a leading slash or a ./ or
-// ../ start does not: the panel takes paths from the repository root.
+// A repository page, such as `beginner/02-first-session.md#why`: a plain
+// click opens it in the page panel. Anything with a scheme, a leading slash
+// or a ./ or ../ start does not: the panel takes paths from the repository
+// root. The app serves no page at that path, so the link's own href is the
+// page on GitHub at main, as the compile step's other repository links are
+// (resolveLink in quest/engine): a new tab, a middle click or a click with a
+// modifier key goes there (263).
 const PAGE = /^(?![a-z][a-z0-9+.-]*:)(?!\/)(?!\.\.?\/)([^#]+\.md)(?:#(.+))?$/i;
 
 /** Text with the Guide's inline marks: `code`, **bold** and [links](url). */
@@ -34,8 +39,18 @@ export function InlineText({ text }: { text: string }) {
         return (
           <a
             key={i}
-            href={href}
+            href={`${githubBlob("main", path)}${fragment === undefined ? "" : `#${fragment}`}`}
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={(event) => {
+              if (
+                event.button !== 0 ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey
+              )
+                return;
               event.preventDefault();
               open(path, fragment);
             }}
