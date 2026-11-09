@@ -486,6 +486,28 @@ test("review fixes: the y/n prompt closes when the step passes", () => {
   );
 });
 
+test("done with the exact command's y/n up goes on and closes the y/n, and no hint is available meanwhile (263)", () => {
+  // The fixture's b-4 Y1 opens on a self beat: the Learner says it is done.
+  const d = midway("b-4", "Y1");
+  assert.equal(beatOf(d.state).verify.kind, "self");
+  while (!d.state.beat.confirm) d.hint();
+  const { hints } = project(d.state).lesson;
+  assert.equal(hints.confirmExact, true);
+  assert.equal(
+    hints.available,
+    false,
+    "no rung opens until the y/n is answered, so Pip offers none",
+  );
+  d.markDone();
+  assert.equal(d.last.changed, true, "done acts with the y/n up");
+  assert.deepEqual(
+    [stepOf(d.state).id, d.state.pos.beat, d.state.beat.confirm],
+    ["Y1", 1, false],
+    "the beat went on, and the y/n closed with it",
+  );
+  assert.deepEqual(d.state.eased, [], "the exact command was never shown");
+});
+
 // was learn-flow:368
 test('review fixes: the status follows the check, with no stale "not yet"', () => {
   const d = at("W3");

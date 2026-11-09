@@ -714,7 +714,9 @@ function hintsView(s: EngineState): HintsView {
   const st = beatState(s);
   if (isDone(st)) return NO_HINTS;
   const rungs = rungsOf(s);
-  const available = hintAvailable(s);
+  // With the exact command's y/n up no rung opens until it is answered, so
+  // none is available: Pip's hint offer waits for it too (263).
+  const available = hintAvailable(s) && !st.confirm;
   const left = rungs.length > 0 && st.rung < rungs.length - 1;
   const first = tryFirst(s);
   const waits =
