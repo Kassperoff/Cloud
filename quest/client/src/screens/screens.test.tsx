@@ -40,6 +40,7 @@ import {
   challengeUnavailableAnswer,
   confirmExact,
   exactTaken,
+  playingWith,
   predictBeat,
   typeBeat,
   typeWrong,
@@ -1700,6 +1701,29 @@ describe("Lesson workspace, questions and hints (247)", () => {
       screen.queryByRole("button", { name: "Check my answer" }),
     ).toBeNull();
     expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
+  });
+
+  test("a reveal that repeats a shown answer's reason shows once, and one that adds to it shows too (265)", () => {
+    const done = askRight.beat as NonNullable<PlayingLesson["beat"]>;
+    const reason = "It reads only the files a task needs.";
+    const withReveal = (reveal: string) =>
+      snapshotOf(
+        playingWith({
+          beat: { ...done, answer: { ...done.answer, reveal } },
+        }),
+      );
+    renderConnected("/lesson/b-1/step", withReveal(reason));
+    expect(screen.getAllByText(reason)).toHaveLength(1);
+    expect(document.querySelector("[data-answer-reveal]")).toBeNull();
+    cleanup();
+    renderConnected(
+      "/lesson/b-1/step",
+      withReveal("Claude Code reads `CLAUDE.md` when a session starts."),
+    );
+    expect(document.querySelector("[data-answer-reveal]")).toHaveTextContent(
+      "Claude Code reads CLAUDE.md when a session starts.",
+    );
+    expect(screen.getAllByText(reason)).toHaveLength(1);
   });
 
   test("a typed answer posts its text, at most 200 characters, and stays after a miss", async () => {

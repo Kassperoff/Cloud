@@ -611,6 +611,11 @@ function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
       const underAnswer = marked.some(
         (i) => beat.options[i]?.because !== undefined,
       );
+      // A reveal that repeats a marked answer's reason would show the same
+      // sentence twice: the reason under the answer already says it.
+      const revealRepeats = marked.some(
+        (i) => beat.options[i]?.because === answer.reveal,
+      );
       return (
         <div className="grid justify-items-start gap-3.5 [&>*]:max-w-full">
           {lines}
@@ -634,8 +639,8 @@ function BeatBody({ beat, where }: { beat: BeatView; where: string | null }) {
               <InlineText text={answer.recall} />
             </p>
           )}
-          {answer.reveal && (
-            <p>
+          {answer.reveal && !revealRepeats && (
+            <p data-answer-reveal="">
               <InlineText text={answer.reveal} />
             </p>
           )}
