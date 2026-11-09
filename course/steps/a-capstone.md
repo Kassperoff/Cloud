@@ -21,7 +21,7 @@ needs: [jq gh]
 - beat: do
 - skill: push
 - verify: check 0
-- watching: git show HEAD:.gitignore
+- watching: git show HEAD:./.gitignore
 - goal: "Keep those working copies out of git."
 - hint: "New worktrees branch from the remote's default branch, so push `main` first"
 - beat: do
@@ -83,7 +83,7 @@ needs: [jq gh]
 - beat: do
 - skill: share-settings
 - verify: check 10
-- watching: git show HEAD:.claude/settings.json
+- watching: git show HEAD:./.claude/settings.json
 - hint: "The committed `.claude/settings.json` registers the marketplace by a relative path and turns the plugin on"
 - hint: "its [`settings.snippet.json`](../../examples/advanced/06-share-your-setup/settings.snippet.json) also denies reading `.env`, which this copy has no rule for yet."
 - beat: do
