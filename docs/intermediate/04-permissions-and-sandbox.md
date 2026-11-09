@@ -1,6 +1,6 @@
 # Permissions, settings scopes and the sandbox
 
-<sub>**Intermediate** · Lesson 4 of 8 · about 20 minutes · Needs: [Organize project memory and see what loaded](02-organize-memory.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
+<sub>**Intermediate** · Lesson 4 of 8 · about 20 minutes · Needs: [Organize project memory and see what loaded](02-organize-memory.md) · Verified against Claude Code v2.1.311 (stable) on 2026-11-09</sub>
 
 ## Goal
 
@@ -59,7 +59,7 @@ In your practice copy:
 
    The deny rule blocks the read: deny rules prevent Claude Code from using the tool on that path. Delete the dummy file afterwards: `rm .env`.
 3. Ask Claude to `Run npm test`. Read the test result. In Manual mode, with the sandbox off and no matching ask or deny rule, this exact command runs without a permission prompt because the allow rule covers it. If it asks, inspect the command and rule sources instead of approving a broader grant.
-4. Turn on the sandbox. Run `/sandbox` and, on the Mode tab, select auto-allow. Claude Code saves the setting to `.claude/settings.local.json`, your personal file, at the repository root, which in a Practice copy is the folder above `project/`; a file in `project/.claude/` counts too ([Get started](https://code.claude.com/docs/en/sandboxing#get-started), [Where Claude Code keeps the local file in a git repository](https://code.claude.com/docs/en/settings#where-claude-code-keeps-the-local-file-in-a-git-repository)). Permission approval and that boundary answer different questions: may this command run, and what can it reach? If `/sandbox` shows only a Dependencies tab, install `bubblewrap` and `socat`, restart Claude Code and run `/sandbox` again.
+4. Turn on the sandbox. Run `/sandbox` and, on the Mode tab, select auto-allow. Claude Code saves the setting to `.claude/settings.local.json`, your personal file, at the repository root, which in a Practice copy is the folder above `project/`; a file in `project/.claude/` counts too ([Get started](https://code.claude.com/docs/en/sandboxing#get-started), [Where Claude Code keeps the local file in a git repository](https://code.claude.com/docs/en/settings#where-claude-code-keeps-the-local-file-in-a-git-repository)). Permission approval and that boundary answer different questions: may this command run, and what can it reach? If `/sandbox` shows only a Dependencies tab, install what it reports, restart Claude Code and run `/sandbox` again.
 5. Ask Claude to try a write outside the project:
 
    ```text

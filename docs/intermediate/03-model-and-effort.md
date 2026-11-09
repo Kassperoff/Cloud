@@ -1,6 +1,6 @@
 # Pick the model and effort
 
-<sub>**Intermediate** · Lesson 3 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.309 (stable) on 2026-11-02</sub>
+<sub>**Intermediate** · Lesson 3 of 8 · about 20 minutes · Needs: [Turn a repeated workflow into a skill](01-first-skill.md) · Verified against Claude Code v2.1.311 (stable) on 2026-11-09</sub>
 
 ## Goal
 
@@ -86,7 +86,7 @@ If the skill check says the model is larger than the task needs, revisit the pre
 
 ## Watch out
 
-- `/model <alias>` and `/effort <level>` save your choice as the default for new sessions. To change only the current session, press `s` in the picker or the slider.
+- `/model <alias>` and `/effort <level>` save your choice as the default for new sessions, except effort `max`, which applies to the current session only. To change only the current session, press `s` in the picker or the slider.
 - A model switch makes the next request read the conversation without cache hits. Claude Code may ask you to confirm while the cache is warm ([Switching models](https://code.claude.com/docs/en/prompt-caching#switching-models)). A skill whose `model:` differs from the session's is a switch too, for that turn: its next request reads the whole conversation with no cache hits.
 
 ## Go further
