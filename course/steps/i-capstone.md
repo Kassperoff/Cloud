@@ -190,7 +190,7 @@ needs: [jq python3]
 - where: shell
 - skill: commit
 - verify: check 11
-- watching: git show HEAD:src
+- watching: git show HEAD:./src
 - goal: "Then commit the source fix and its regression test together."
 - hint: "The committed CLI reports malformed percent escapes as broken links, continues checking later links and still resolves valid encoded paths."
 

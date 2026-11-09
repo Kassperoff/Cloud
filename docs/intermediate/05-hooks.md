@@ -125,7 +125,7 @@ Claude sometimes stops while the tests fail: send it back to work when it does, 
 You are done when all of these are true:
 
 - [ ] Both hook scripts are committed and executable: `git ls-files -s .claude/hooks` shows `100755` for `protect-files.sh` and `test-gate.sh`.
-- [ ] The committed `.claude/settings.json` runs `protect-files.sh` as a `PreToolUse` hook for `Edit|Write` with `"onFailure": "block"`, and `test-gate.sh` as a `Stop` hook: `git show HEAD:.claude/settings.json | jq .hooks` shows both.
+- [ ] The committed `.claude/settings.json` runs `protect-files.sh` as a `PreToolUse` hook for `Edit|Write` with `"onFailure": "block"`, and `test-gate.sh` as a `Stop` hook: `git show HEAD:./.claude/settings.json | jq .hooks` shows both.
 - [ ] The committed gate gives step 3's results: exit 2 with a reason while the tests fail, and exit 0 once they pass or when `stop_hook_active` is `true`.
 - [ ] The committed `protect-files.sh` gives exit 2 for `package-lock.json`, as Worked example step 3 shows, and exit 0 for a file it doesn't protect.
 - [ ] Self-check (not tested): in a session, the gate sent Claude back to work while a test failed.
