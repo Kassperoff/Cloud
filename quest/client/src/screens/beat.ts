@@ -39,6 +39,13 @@ export interface PrimaryAction {
 }
 
 /**
+ * A done-label as a button's words: step files write it as the Learner's
+ * reply ("it's committed"), and a button starts with a capital.
+ */
+const sentence = (label: string | null | undefined) =>
+  label && label.charAt(0).toUpperCase() + label.slice(1);
+
+/**
  * The action the moment needs, or null while a question waits for a pick
  * (its answers are the action). Check again shows on a checked or watched
  * beat in every state, before the first look too.
@@ -54,13 +61,13 @@ export function primaryAction(beat: BeatView): PrimaryAction | null {
     case "session":
       return {
         type: "session.ended",
-        label: beat.doneLabel ?? "The session has ended",
+        label: sentence(beat.doneLabel) ?? "The session has ended",
         variant: "primary",
       };
     case "learner":
       return {
         type: "step.markDone",
-        label: beat.doneLabel ?? "I've done it",
+        label: sentence(beat.doneLabel) ?? "I've done it",
         variant: "primary",
       };
     case "answer":
