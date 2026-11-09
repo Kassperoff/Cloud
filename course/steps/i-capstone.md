@@ -148,7 +148,9 @@ needs: [jq python3]
 - verify: self
 - done-label: I reproduced it
 - goal: "Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow"
-- hint: "a link such as `[broken](bad%.md)` crashes the checker with `URIError: URI malformed` instead of producing its normal broken-link report."
+- note: "a link such as `[broken](bad%.md)` stops the checker before it reports any link."
+- hint: "Depending on your copy's `src/cli.js`, it crashes with `URIError: URI malformed` and a stack trace, exiting with code 1, or prints `linkcheck: URI malformed` and exits with code 2."
+- note: "If Claude Code shows the "Claude in Chrome extension detected" dialog as it starts, choose **No, keep browser tools off**: the docs open in the browser that the chrome-devtools server starts"
 - beat: do
 - verify: self
 - done-label: I saw red and green
@@ -179,6 +181,14 @@ needs: [jq python3]
 - goal: "Before the review, commit your setup (the skill, the reviewer, the settings and the server file) and keep the fix and its test uncommitted: the check reads your reviewer from git."
 - say: Stage everything except the source fix and its test, then commit.
 - beat: do
+- where: terminal
+- skill: start
+- verify: self
+- done-label: it's running
+- say: Exit Claude Code, then start it again in your practice copy with the hook file.
+- note: "a session started with `claude --settings .practice/i-capstone-hook.json`"
+- run: "claude --settings .practice/i-capstone-hook.json"
+- beat: do
 - skill: delegate
 - verify: check 12 fresh
 - watching: .practice/i-capstone-agents.txt
@@ -205,6 +215,7 @@ needs: [jq python3]
 - done-label: it's running
 - goal: "Then try each part in a session"
 - say: Start Claude Code in your practice copy, or keep the session from step 8 open.
+- note: "If Claude Code shows the "Claude in Chrome extension detected" dialog as it starts, choose **No, keep browser tools off**: the docs open in the browser that the chrome-devtools server starts"
 - beat: self
 - skill: match-skill
 - done-label: yes, I did
@@ -232,6 +243,8 @@ needs: [jq python3]
 - beat: self
 - skill: use-mcp
 - done-label: yes, I did
+- goal: "Claude should open the docs in a browser through Chrome DevTools MCP"
+- say: Ask Claude in your session to open a docs page that way, then tick this.
 - self: "I approved the MCP server in a session and used one of its tools."
 - beat: self
 - skill: delegate
@@ -241,6 +254,7 @@ needs: [jq python3]
 - skill: set-model
 - done-label: yes, I can
 - goal: "Then try each part in a session, and pick the model and effort for each job as [lesson 3](03-model-and-effort.md) showed."
+- say: In your session, pick a model and an effort level for one of these jobs, and say why, then tick this.
 - self: "I can pick a model and an effort level for a task, and say why."
 - beat: do
 - where: shell
@@ -255,6 +269,7 @@ needs: [jq python3]
 - run: "npm run check -- i-capstone"
 - hint: "Each item that fails prints what to fix."
 - beat: self
+- where: terminal
 - skill: install-plugin
 - done-label: yes, I did
 - self: "I installed the plugin with `claude plugin install claude-code-setup@claude-plugins-official --scope project`, as a teammate does after pulling the settings."

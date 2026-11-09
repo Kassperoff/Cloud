@@ -14,7 +14,7 @@ A new teammate starts Monday with only what's in git: commit a setup that works 
 6. **The docs in a browser.** Claude should open the docs in a browser through Chrome DevTools MCP, which we reviewed at one version. Everyone runs that version, and nothing leaves our machines that doesn't need to: usage statistics, CrUX lookups and update checks stay off.
 7. **One official plugin.** Everyone in the repository gets `claude-code-setup` from the official marketplace.
 
-8. **A real bug, fixed with your setup.** Reproduce the malformed-percent crash in `capstone/intermediate-bug.md` with your link-check workflow, fix it while `samples/` stays protected, add a regression test, and have your reviewer review the fix before you commit the source fix and its regression test together. Log that review as the capstone page shows.
+8. **A real bug, fixed with your setup.** Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow, fix it while `samples/` stays protected, add a regression test, and have your reviewer review the fix before you commit the source fix and its regression test together. Log that review as the capstone page shows.
 
 ## Done when
 
