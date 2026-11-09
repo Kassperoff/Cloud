@@ -18,6 +18,18 @@ const LINK = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
 // modifier key goes there (263).
 const PAGE = /^(?![a-z][a-z0-9+.-]*:)(?!\/)(?!\.\.?\/)([^#]+\.md)(?:#(.+))?$/i;
 
+// A link's words may hold code, as in [`tdd` skill](url) (d264-i1, i-6).
+const labelOf = (label: string) =>
+  label.split(/(`[^`]+`)/).map((part, i): ReactNode =>
+    part.length > 2 && part.startsWith("`") && part.endsWith("`") ? (
+      <code key={i} className={CODE}>
+        {part.slice(1, -1)}
+      </code>
+    ) : (
+      part
+    ),
+  );
+
 /** Text with the Guide's inline marks: `code`, **bold** and [links](url). */
 export function InlineText({ text }: { text: string }) {
   const { open } = usePagePanel();
@@ -55,15 +67,16 @@ export function InlineText({ text }: { text: string }) {
               open(path, fragment);
             }}
           >
-            {label}
+            {labelOf(label)}
           </a>
         );
       }
       // Only a web link leaves the page: any other scheme stays text.
-      if (!/^https?:\/\//i.test(href)) return <span key={i}>{label}</span>;
+      if (!/^https?:\/\//i.test(href))
+        return <span key={i}>{labelOf(label)}</span>;
       return (
         <a key={i} href={href} target="_blank" rel="noopener noreferrer">
-          {label}
+          {labelOf(label)}
         </a>
       );
     }
