@@ -1168,10 +1168,11 @@ export function parseLesson(
       if (
         b.lines.some((l) => l.doneWhen) &&
         b.verify.kind !== "check" &&
+        b.verify.kind !== "git-clean" &&
         !READS.has(b.verify.kind)
       )
         throw new Error(
-          `${file}:${String(b.line)}: a "Done when" say line needs a check beat or a beat that reads a file`,
+          `${file}:${String(b.line)}: a "Done when" say line needs a check beat, a beat that reads a file or a git-clean beat`,
         );
     }
   }
