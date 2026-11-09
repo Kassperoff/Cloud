@@ -124,6 +124,20 @@ export async function actionKit(
   };
 }
 
+/**
+ * An action pressed on the beat the host's snapshot shows, with its key as
+ * the card's data-beat renders it (264).
+ */
+export function onBeat(host: Host, type: string): object {
+  const lesson = host.snapshot()?.lesson;
+  if (lesson?.phase !== "playing" || !lesson.step || !lesson.beat)
+    throw new Error("no beat on the card");
+  return {
+    type,
+    beat: `${lesson.id}:${lesson.step.id}:${String(lesson.beat.index)}`,
+  };
+}
+
 /** A request for `action` at the host's current place. */
 export function at(host: Host, action: object): object {
   return { action, instance: host.instance, revision: host.revision() };

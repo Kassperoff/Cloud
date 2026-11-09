@@ -926,14 +926,20 @@ function Actions({
   beat: BeatView;
 }) {
   const revisit = useActionProps("step.revisit", { type: "step.revisit" });
-  const skip = useActionProps("step.skip", { type: "step.skip" });
-  const check = useActionProps("check.run", {
-    type: "check.run",
-    beat: beatKey(lesson.id, step.id, beat.index),
+  // Each press that moves past or acts on the beat carries the beat it was
+  // pressed on, so one from a tab showing an earlier beat changes nothing.
+  const key = beatKey(lesson.id, step.id, beat.index);
+  const skip = useActionProps("step.skip", { type: "step.skip", beat: key });
+  const check = useActionProps("check.run", { type: "check.run", beat: key });
+  const markDone = useActionProps("step.markDone", {
+    type: "step.markDone",
+    beat: key,
   });
-  const markDone = useActionProps("step.markDone", { type: "step.markDone" });
   const ended = useActionProps("session.ended", { type: "session.ended" });
-  const next = useActionProps("step.continue", { type: "step.continue" });
+  const next = useActionProps("step.continue", {
+    type: "step.continue",
+    beat: key,
+  });
   const props = {
     "step.continue": next,
     "check.run": check,

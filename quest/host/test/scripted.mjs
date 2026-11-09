@@ -123,15 +123,17 @@ export const turn = async () => {
   for (let i = 0; i < 3; i++) await new Promise((r) => setImmediate(r));
 };
 
-// Check again on the beat the snapshot shows: its key, as the card's
-// data-beat renders it (ticket 292).
-export const checkRun = (host) => {
+// An action pressed on the beat the snapshot shows, with its key as the
+// card's data-beat renders it: Check again (ticket 292), Continue, Skip and
+// I've done it (264).
+export const onBeat = (host, type) => {
   const { lesson } = host.snapshot();
   return {
-    type: "check.run",
+    type,
     beat: `${lesson.id}:${lesson.step.id}:${String(lesson.beat.index)}`,
   };
 };
+export const checkRun = (host) => onBeat(host, "check.run");
 
 // The inputs the host reduced, by type, from its listener's record.
 export const typesOf = (heard) => heard.map((h) => h.input.type);

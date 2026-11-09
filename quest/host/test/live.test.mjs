@@ -12,7 +12,7 @@ import {
   finishedBefore,
   threeLevels,
 } from "../../engine/test/drive.mjs";
-import { AT_W3, fakeHost, turn, w3 } from "./scripted.mjs";
+import { AT_W3, fakeHost, onBeat, turn, w3 } from "./scripted.mjs";
 
 const MINE = "/home/ali/mine";
 const b1 = course.find((l) => l.id === "b-1");
@@ -36,7 +36,7 @@ async function atEnd(options = {}) {
   h.host.dispatch({ type: "lesson.open", lesson: "b-1" });
   return h;
 }
-const finish = (host) => host.dispatch({ type: "step.markDone" });
+const finish = (host) => host.dispatch(onBeat(host, "step.markDone"));
 const pendingIds = (host) => host.snapshot().milestones.map((m) => m.id);
 
 // The real engine, with one notice event for each folder.cancel (an action
@@ -232,7 +232,7 @@ test("a new host over the same save: no milestone pending, a new instance, IDs t
   second.host.dispatch({ type: "lesson.open", lesson: "b-1" });
   second.host.dispatch({ type: "lesson.restart", lesson: "b-1" });
   second.host.dispatch({ type: "lesson.start", help: "planned" });
-  second.host.dispatch({ type: "step.continue" });
+  second.host.dispatch(onBeat(second.host, "step.continue"));
   const ids = [first, second].map(({ heard }) =>
     heard.flatMap((h) => h.events.map((e) => e.id)),
   );
@@ -280,10 +280,9 @@ test("dispatch gives the revision and snapshot after the action; one sent from a
   assert.equal(state().pos.step, step, "nothing applied");
   assert.equal(heard.length, count, "nothing reduced");
   // The same action from the place now applies; one with no revision too.
-  const now = host.dispatch(
-    { type: "step.continue" },
-    { revision: back.revision },
-  );
+  const now = host.dispatch(onBeat(host, "step.continue"), {
+    revision: back.revision,
+  });
   assert.equal(now.stale, undefined);
   assert.equal(heard.length, count + 1);
   host.dispatch({ type: "step.back" });

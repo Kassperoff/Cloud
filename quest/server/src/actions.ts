@@ -53,9 +53,15 @@ export const actionSchema = z.discriminatedUnion("type", [
     to: z.union([z.literal("practice-copy"), z.strictObject({ path })]),
   }),
   bare("folder.cancel"),
-  bare("step.continue"),
+  z.strictObject({
+    type: z.literal("step.continue"),
+    beat: z.string().min(1).max(200),
+  }),
   bare("step.back"),
-  bare("step.skip"),
+  z.strictObject({
+    type: z.literal("step.skip"),
+    beat: z.string().min(1).max(200),
+  }),
   bare("step.revisit"),
   z.strictObject({ type: z.literal("answer.pick"), option }),
   bare("answer.reveal"),
@@ -63,7 +69,10 @@ export const actionSchema = z.discriminatedUnion("type", [
     type: z.literal("answer.type"),
     text: z.string().max(TEXT_LIMIT),
   }),
-  bare("step.markDone"),
+  z.strictObject({
+    type: z.literal("step.markDone"),
+    beat: z.string().min(1).max(200),
+  }),
   bare("session.ended"),
   z.strictObject({
     type: z.literal("check.run"),

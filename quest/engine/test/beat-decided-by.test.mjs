@@ -95,7 +95,7 @@ const ROWS = [
 
 // Whether an action took: it changed the state or asked for effects.
 const takes = (d, type) => {
-  const r = d.act(type);
+  const r = d.act(type, { beat: keyOf(d.state) });
   return r.changed || r.effects.length > 0;
 };
 
@@ -130,10 +130,10 @@ test("step.markDone takes only a learner beat, session.ended only a session beat
   }
   // An answer beat: its own answer decides it, never markDone.
   const d = onY1(`- beat: do\n${ASK}`);
-  d.refused("step.markDone");
+  d.refused("step.markDone", { beat: keyOf(d.state) });
   d.pick(beatOf(d.state).options.findIndex((o) => o.kind === "right"));
   assert.equal(d.state.beat.status, "done");
-  d.refused("step.markDone");
+  d.refused("step.markDone", { beat: keyOf(d.state) });
 });
 
 test("every beat of the course: the guards agree with decidedBy, and every kind is reached", () => {

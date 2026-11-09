@@ -16,6 +16,7 @@ import {
   stepOf,
   threeLevels,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 // Lesson 1's W7 git step, passed with W1 to W6 done: going on shows the
@@ -32,7 +33,7 @@ test("the level-up's back returns to the step before it, and its tier joins noth
   const d = toLevelUp();
   // The level-up is no card: step.back is for a card, the level-up has its own.
   d.refused("step.back");
-  d.refused("step.continue");
+  d.refused("step.continue", { beat: keyOf(d.state) });
   d.stepBack();
   assert.deepEqual(
     [where(d.state).phase, where(d.state).step, where(d.state).beat],

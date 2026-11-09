@@ -36,6 +36,7 @@ import {
   threeLevels,
   watching,
   where,
+  keyOf,
 } from "./drive.mjs";
 
 // spec: guards.4-watch-shape
@@ -190,7 +191,7 @@ test("a beat with its question still open is not marked done", () => {
   );
   assert.ok(beatOf(d.state).ask, "the beat asks");
   assert.equal(beatOf(d.state).verify.kind, "self");
-  d.refused("step.markDone");
+  d.refused("step.markDone", { beat: keyOf(d.state) });
   assert.equal(d.state.beat.status, "waiting");
   d.pick(beatOf(d.state).options.findIndex((o) => o.kind === "right"));
   assert.equal(d.state.beat.status, "done", "the answer decides it");

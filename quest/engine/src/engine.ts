@@ -2195,8 +2195,11 @@ const ACTIONS: ActionHandlers = {
     s.folderAsk = null;
     return true;
   },
-  "step.continue"(s, _a, effects) {
-    if (!onCard(s) || !isDone(s.beat)) return false;
+  // Continue, Skip and Done carry the beat they were pressed on (264): a
+  // press from a tab that showed an earlier beat must not move this one, as
+  // a late Check again must not run it (292).
+  "step.continue"(s, a, effects) {
+    if (!onCard(s) || !isDone(s.beat) || a.beat !== beatKeyOf(s)) return false;
     advance(s, effects);
     return true;
   },
@@ -2205,8 +2208,14 @@ const ACTIONS: ActionHandlers = {
     back(s, effects);
     return true;
   },
-  "step.skip"(s, _a, effects) {
-    if (!onCard(s) || yesNo(s) || !currentStep(s).optional) return false;
+  "step.skip"(s, a, effects) {
+    if (
+      !onCard(s) ||
+      yesNo(s) ||
+      !currentStep(s).optional ||
+      a.beat !== beatKeyOf(s)
+    )
+      return false;
     skipStep(s, effects);
     return true;
   },
@@ -2256,8 +2265,14 @@ const ACTIONS: ActionHandlers = {
   // Self, none and self-kind beats: the Learner says it is done, and the
   // card goes on. Done acts with the exact command's y/n up too (263): the
   // Learner did the step without it, so the y/n closes unanswered.
-  "step.markDone"(s, _a, effects) {
-    if (!onCard(s) || isDone(s.beat) || openQuestion(s)) return false;
+  "step.markDone"(s, a, effects) {
+    if (
+      !onCard(s) ||
+      isDone(s.beat) ||
+      openQuestion(s) ||
+      a.beat !== beatKeyOf(s)
+    )
+      return false;
     const beat = currentBeat(s);
     if (decidedBy(beat) !== "learner") return false;
     beatState(s).confirm = false;
