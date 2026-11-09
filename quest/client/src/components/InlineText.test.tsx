@@ -37,6 +37,22 @@ test("code inside a link's words shows as code, not backticks", () => {
   expect(container.querySelector("p")?.textContent).not.toContain("`");
 });
 
+test("code inside bold words shows as code, not backticks (d265-a3)", () => {
+  const { container } = render(
+    <p>
+      <InlineText text="The prompt offers **Yes, and don't ask again for `<name>` in `<path>`**." />
+    </p>,
+  );
+  const bold = container.querySelector("strong");
+  expect(bold).toHaveTextContent(
+    "Yes, and don't ask again for <name> in <path>",
+  );
+  expect(
+    [...(bold?.querySelectorAll("code") ?? [])].map((c) => c.textContent),
+  ).toEqual(["<name>", "<path>"]);
+  expect(container.querySelector("p")?.textContent).not.toContain("`");
+});
+
 test("a web link opens in a new tab", () => {
   render(
     <InlineText text="See [the docs](https://code.claude.com/docs/en/overview)." />,
