@@ -23,6 +23,7 @@ import {
   course,
   learnerBeat,
   offersBoth,
+  pageTable,
   richCopy,
   sessionBeat,
   tearDown,
@@ -1431,6 +1432,38 @@ describe("Lesson workspace, every step (246)", () => {
       expect(el).not.toBeNull();
       expect(el?.closest(".text-muted")).toBeNull();
     }
+  });
+
+  test("a page table is a table with column headers, its cells through InlineText, wrapping within the card (263)", () => {
+    renderConnected("/lesson/b-1/step", snapshotOf(pageTable));
+    const table = screen.getByRole("table");
+    const headers = within(table).getAllByRole("columnheader");
+    expect(headers.map((h) => h.textContent)).toEqual([
+      "Where",
+      "What goes in it",
+      "Who gets it",
+    ]);
+    for (const h of headers) expect(h).toHaveAttribute("scope", "col");
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(5);
+    const cells = within(rows[1] as HTMLElement).getAllByRole("cell");
+    expect(cells.map((c) => c.textContent)).toEqual([
+      "./CLAUDE.md",
+      "Commands, conventions, layout",
+      "The team: commit it",
+    ]);
+    expect(cells[0]?.querySelector("code")).toHaveTextContent("./CLAUDE.md");
+    // The columns share the card's width and every cell wraps, a code span
+    // too: no sideways scroll at phone width.
+    expect(table).toHaveClass("w-full", "table-fixed", "wrap-anywhere");
+    // In the beat's order: after the goal, before the note.
+    const order = [
+      ...document.querySelectorAll(
+        "[data-line-kind=goal], table, [data-line-kind=note]",
+      ),
+    ].map((el) => el.getAttribute("data-line-kind"));
+    expect(order).toEqual(["goal", "table", "note"]);
+    expect(unquoted(snapshotOf(pageTable))).toEqual([]);
   });
 
   test("Copy is not doing the step: it posts nothing and the step stays as it was", async () => {
