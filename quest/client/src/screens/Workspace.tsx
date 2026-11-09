@@ -69,7 +69,12 @@ const WHERE: Record<NonNullable<StepView["where"]>["kind"], string> = {
 const TEAR_DOWN_LINE =
   "The Check passed. These steps put things back as they were.";
 
-/** The line under passed Check lines once the Practice copy ran it too. */
+/**
+ * The line under a passed Check step's lines once the check ran on another
+ * folder than the Practice copy. Not in a Lesson in the Learner's own
+ * repository, whose steps have no Practice copy twin, nor on another step,
+ * whose work happens in that other folder.
+ */
 const RUN_IT_TOO =
   "Run it in your practice copy too: you will see the same result.";
 
@@ -148,6 +153,7 @@ export function Workspace() {
       beat={lesson.beat}
       number={number}
       tearDownLeft={active.summary?.tearDownLeft ?? false}
+      ownRepo={active.summary?.folder.kind === "work"}
       snapshot={active.snapshot}
     />
   );
@@ -159,6 +165,7 @@ function Play({
   beat,
   number,
   tearDownLeft,
+  ownRepo,
   snapshot,
 }: {
   lesson: PlayingLesson;
@@ -166,6 +173,8 @@ function Play({
   beat: BeatView;
   number: number | null;
   tearDownLeft: boolean;
+  /** The Lesson runs in its Level's Work folder, the Learner's own repository. */
+  ownRepo: boolean;
   snapshot: Snapshot;
 }) {
   const main = useRef<HTMLElement>(null);
@@ -236,7 +245,7 @@ function Play({
   const tearDowns = lesson.steps.filter(isTearDown);
   const firstTearDown = tearDown && tearDowns[0]?.id === step.id;
   const lines = checkLines(beat);
-  const ranIn = ranInOf(beat);
+  const runItToo = step.part === "Check" && !ownRepo && ranInOf(beat) !== null;
   const where = step.where;
   const passed = lines.length > 0 && lines.every((l) => l.state === "pass");
   const eyebrow = tearDown
@@ -361,7 +370,7 @@ function Play({
               }))}
             />
           )}
-          {passed && ranIn !== null && <p data-ran-in="">{RUN_IT_TOO}</p>}
+          {passed && runItToo && <p data-ran-in="">{RUN_IT_TOO}</p>}
           {beat.winNote && (
             <p data-win-note="">
               <InlineText text={beat.winNote} />
