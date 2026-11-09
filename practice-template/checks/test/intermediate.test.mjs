@@ -915,6 +915,16 @@ test('i-8 says how to save the plugin list when it is missing or not JSON', () =
     const { code, out } = check(['i-8', '--dir', dir]);
     assert.equal(code, 1, out);
     assert.match(out, /claude plugin list --json > \.practice\/i-8-plugins\.json/);
+    assert.match(out, /From the folder where you start `claude` \(in a Practice copy, `project\/`, not the folder above it\)/);
+  });
+  withRepo(() => {
+    const dir = pluginRepo({ list: null })();
+    write(dir, { '.practice/i-8-plugins.json': 'Installed plugins:\n' });
+    return dir;
+  }, (dir) => {
+    const { code, out } = check(['i-8', '--dir', dir]);
+    assert.equal(code, 1, out);
+    assert.match(out, /isn't JSON\. Run `claude plugin list --json > \.practice\/i-8-plugins\.json` again, from the folder where you start `claude` \(in a Practice copy, `project\/`/);
   });
 });
 

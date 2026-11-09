@@ -14,6 +14,10 @@ export const title = 'Install and manage plugins';
 
 const ANTHROPIC = ['claude-plugins-official', 'claude-community', 'claude-code-plugins'];
 const SAVE = '`claude plugin list --json > .practice/i-8-plugins.json`';
+// Where to save the list: in a Practice copy, a list saved from the folder
+// above project/ lands where the check doesn't read it, and there it showed
+// the project plugin not enabled.
+const WHERE = 'the folder where you start `claude` (in a Practice copy, `project/`, not the folder above it)';
 
 // Whether an install's projectPath is this repository: true or false when the
 // path exists on this machine, null when it doesn't (a list saved elsewhere).
@@ -64,12 +68,12 @@ function projectPlugins(repo) {
  */
 function savedList(repo) {
   const text = repo.read('.practice/i-8-plugins.json');
-  if (text === null) return `In the repository, run ${SAVE}.`;
+  if (text === null) return `From ${WHERE}, run ${SAVE}.`;
   try {
     const list = JSON.parse(text);
     return Array.isArray(list) ? list : list?.installed ?? [];
   } catch {
-    return `.practice/i-8-plugins.json isn't JSON. Run ${SAVE} again, from the repository's root.`;
+    return `.practice/i-8-plugins.json isn't JSON. Run ${SAVE} again, from ${WHERE}.`;
   }
 }
 
