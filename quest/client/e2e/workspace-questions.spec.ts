@@ -55,7 +55,7 @@ async function namesNoKey(page: Page) {
   expect(text).not.toMatch(KEY_NAMES);
 }
 
-test("a guess is sent by its button, drawn with no judgement, then Next step", async ({
+test("a guess is sent by its button, drawn with no judgement, then Continue", async ({
   page,
 }) => {
   const sent = actionsOf(page);
@@ -75,7 +75,7 @@ test("a guess is sent by its button, drawn with no judgement, then Next step", a
     card(page).locator("[data-state=right], [data-state=notYet]"),
   ).toHaveCount(0);
   await expect(
-    bar(page).getByRole("button", { name: "Next step" }),
+    bar(page).getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await namesNoKey(page);
 });
@@ -97,7 +97,7 @@ test("a wrong answer plays Retry and keeps the step; a right one plays Success",
     "It reads only the files a task needs.",
   );
   await expect(
-    bar(page).getByRole("button", { name: "Next step" }),
+    bar(page).getByRole("button", { name: "Continue", exact: true }),
   ).toHaveCount(0);
   await show(page, askRight);
   await event(page, "q.2", "answer.right");
@@ -107,7 +107,7 @@ test("a wrong answer plays Retry and keeps the step; a right one plays Success",
     "CLAUDE.md",
   );
   await expect(
-    bar(page).getByRole("button", { name: "Next step" }),
+    bar(page).getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await namesNoKey(page);
 });
@@ -152,13 +152,13 @@ test("a typed answer sends its text from the keyboard, and stays to edit after a
   );
 });
 
-test("a choice that shows later beats is drawn chosen, then Next step", async ({
+test("a choice that shows later beats is drawn chosen, then Continue", async ({
   page,
 }) => {
   await openAt(page, whenOption);
   await expect(card(page).locator("[data-state=chosen]")).toContainText("zsh");
   await expect(
-    bar(page).getByRole("button", { name: "Next step" }),
+    bar(page).getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
 });
 

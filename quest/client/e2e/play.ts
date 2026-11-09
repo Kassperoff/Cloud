@@ -178,7 +178,10 @@ export async function openLesson(page: Page, copy: PracticeCopy, id?: string) {
  */
 export async function move(page: Page) {
   const before = await page.locator("main").innerText();
-  const next = bar(page).getByRole("button", { name: "Next step" });
+  // A done beat goes on with Continue, or with Next step from its step's last.
+  const next = bar(page).getByRole("button", {
+    name: /^(Next step|Continue)$/,
+  });
   const check = bar(page).getByRole("button", { name: "Check again" });
   // The answers not tried yet: a wrong one stays marked, the next is tried.
   const untried = page.locator(

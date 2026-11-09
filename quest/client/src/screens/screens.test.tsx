@@ -81,7 +81,7 @@ const APP_WORDS: readonly RegExp[] = [
   /^(Check again runs these lines\.|Not yet\.)$/,
   /^Not yet\. The lines below say what the check saw\.$/,
   /^(Passes|Not yet|Checking): $/,
-  /^(Check again|I've done it|Next step|Back|Skip|Show a hint|Another hint|Copy|Copied)$/,
+  /^(Check again|I've done it|Next step|Continue|Back|Skip|Show a hint|Another hint|Copy|Copied)$/,
   /^Less help from here$/,
   /^(Go on with hints|Go on on your own|Keep every command shown)$/,
   /^to$/,
@@ -666,15 +666,20 @@ describe("Lesson workspace", () => {
     expect(check).not.toHaveAttribute("aria-disabled");
   });
 
-  test("a done beat goes on with Next step; a self beat says it is done", async () => {
+  test("a done beat goes on with Continue, or Next step from the step's last; a self beat says it is done", async () => {
     const user = userEvent.setup();
     const beat = playing.beat;
     if (beat === null) throw new Error("the fixture has a beat");
     const done = {
       ...playing,
-      beat: { ...beat, status: "done" as const, fail: null },
+      beat: { ...beat, status: "done" as const, fail: null, last: false },
     };
     const page = renderConnected("/lesson/b-1/step", snapshotOf(done));
+    expect(screen.queryByRole("button", { name: "Next step" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    const doneLast = { ...done, beat: { ...done.beat, last: true } };
+    page.send(snapshotOf(doneLast, { revision: 2 }));
+    expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Next step" }));
     const self = {
       ...playing,
@@ -688,9 +693,10 @@ describe("Lesson workspace", () => {
         self: "Self-check (not tested): you can say which model it was.",
       },
     };
-    page.send(snapshotOf(self, { revision: 2 }));
+    page.send(snapshotOf(self, { revision: 3 }));
     await user.click(screen.getByRole("button", { name: "I've done it" }));
     expect(page.posts).toEqual([
+      { type: "step.continue" },
       { type: "step.continue" },
       { type: "step.markDone" },
     ]);
@@ -1617,7 +1623,7 @@ describe("Lesson workspace, questions and hints (247)", () => {
     expect(
       document.querySelector("[data-state=right], [data-state=notYet]"),
     ).toBeNull();
-    expect(screen.getByRole("button", { name: "Next step" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
   });
 
   test("a wrong pick keeps the step, says its reason once and offers the answer", async () => {
@@ -1656,7 +1662,7 @@ describe("Lesson workspace, questions and hints (247)", () => {
     expect(
       screen.queryByRole("button", { name: "Check my answer" }),
     ).toBeNull();
-    expect(screen.getByRole("button", { name: "Next step" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
   });
 
   test("a typed answer posts its text, at most 200 characters, and stays after a miss", async () => {

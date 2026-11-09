@@ -17,6 +17,7 @@ import {
   saveAt,
 } from "./play.ts";
 import { practiceCopy, type PracticeCopy } from "./practice-copy.ts";
+import { courseLessons } from "./walk.ts";
 
 test.describe.configure({ mode: "parallel" });
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -379,7 +380,7 @@ for (const row of ROWS)
         await expect(page.locator("main")).toContainText(row.says);
         await namesNoKey(page);
 
-        // Passed, with what the Check saw, and Next step.
+        // Passed, with what the Check saw, and the button that goes on.
         row.show(copy);
         // The host's watcher can see the change and pass the beat before the
         // press lands; a press then would go to the next beat (254 D25), so
@@ -394,7 +395,10 @@ for (const row of ROWS)
       } else {
         await expect(page.locator("main")).toContainText(row.says);
       }
-      const next = bar(page).getByRole("button", { name: "Next step" });
+      const next = bar(page).getByRole("button", {
+        name: goOn(row.lesson, row.at),
+        exact: true,
+      });
       await expect(next).toBeVisible({ timeout: 30_000 });
       await expect(lines(page).last()).toHaveAttribute("data-state", "ok");
       await namesNoKey(page);
@@ -693,6 +697,19 @@ test('a link with one leading slash remains a project link', () => {
     await copy.dispose();
   }
 });
+
+// The words of the button that goes on from a done beat at `at` in `lesson`:
+// Next step on its step's last beat, Continue before it. No row's step has a
+// beat after it that only a choice shows.
+function goOn(lesson: string, [step, beat]: [string, number]): string {
+  const beats =
+    courseLessons()
+      .find((l) => l.id === lesson)
+      ?.content.steps.find((s) => s.id === step)?.beats ?? [];
+  if (beat >= beats.length)
+    throw new Error(`${lesson} ${step}: no beat ${String(beat)}`);
+  return beat === beats.length - 1 ? "Next step" : "Continue";
+}
 
 // The first beat of `step` in `lesson` that checks only slow items, from the
 // compiled course, so a beat added before it moves the test with it.
