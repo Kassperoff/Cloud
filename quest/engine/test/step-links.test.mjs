@@ -211,7 +211,7 @@ describe("the compiled course", () => {
     const lines = stepFiles[file].split("\n");
     const to = "02-no-such-page.md#worked-example";
     const at = (words) => lines.findIndex((l) => l.includes(words));
-    const r1 = at('- because: "If you could describe the diff');
+    const r1 = at('- because: "A new key in `linkcheck.json` is such a change');
     const w2 = at('- hint: "A precise request needs fewer corrections');
     const link = at("(02-permission-modes-and-plan-mode.md#worked-example)");
     expect(r1).toBeGreaterThan(0);

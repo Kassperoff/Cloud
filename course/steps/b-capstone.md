@@ -140,7 +140,7 @@ badge: Beginner
 - beat: self
 - self: "I can tell which model and account a session uses, with `/status` ([Commands](https://code.claude.com/docs/en/commands)), and I check what Claude tells me against the code."
 - beat: self
-- self: "I can say which permission mode a task needs: auto mode for work whose direction I trust, plan mode when I want to approve a plan before any change, and Manual mode when I want Claude Code to ask before most edits and commands. I skip the plan when I could describe the diff in one sentence."
+- self: "I can say which permission mode a task needs: auto mode for work whose direction I trust, plan mode when I want to approve a plan before any change, and Manual mode when I want Claude Code to ask before most edits and commands."
 - beat: self
 - self: "I read the whole diff, the tests included, against the bug report before committing, and asked Claude to correct anything that fell short, or found nothing to correct."
 - beat: self

@@ -22,7 +22,7 @@ Each session starts with a fresh context window. Your instruction files load at 
 | `./CLAUDE.local.md` | Your notes for this project | Only you: add it to `.gitignore` |
 | Auto memory | Notes Claude saves, such as what you ask it to remember | Only you, on this machine |
 
-- `/init` writes a first `CLAUDE.md` from the code. Then cut it: for each line, ask whether removing it would make Claude make mistakes ([Write an effective CLAUDE.md](https://code.claude.com/docs/en/best-practices#write-an-effective-claude-md)).
+- `/init` writes a first `CLAUDE.md` from the code. From there the work is mostly removing lines: keep only what Claude couldn't work out from the code itself ([Keep CLAUDE.md short](https://code.claude.com/docs/en/best-practices#keep-claude-md-short)).
 - Add a line when Claude makes the same mistake a second time, or you type the same correction again ([When to add to CLAUDE.md](https://code.claude.com/docs/en/memory#when-to-add-to-claude-md)).
 - Say "add this to CLAUDE.md" to put an instruction in the file; "remember" puts it in auto memory ([View and edit with `/memory`](https://code.claude.com/docs/en/memory#view-and-edit-with-%2Fmemory)).
 - These files are context, not configuration Claude must obey: a rule that must never be broken needs a [hook](https://code.claude.com/docs/en/hooks-guide), which the [Intermediate level](../intermediate/README.md) teaches.
@@ -110,7 +110,7 @@ If CLAUDE.md isn't committed, run `git add CLAUDE.md` and commit it. If a new fi
 
 ## Go further
 
-- [Write an effective CLAUDE.md](https://code.claude.com/docs/en/best-practices#write-an-effective-claude-md): what to put in it and what to leave out.
+- [Keep CLAUDE.md short](https://code.claude.com/docs/en/best-practices#keep-claude-md-short): what to put in it and what to leave out.
 - [Write effective instructions](https://code.claude.com/docs/en/memory#write-effective-instructions): size, structure and consistency, with a target length.
 - [Auto memory](https://code.claude.com/docs/en/memory#auto-memory): what Claude saves for itself, where, and how to turn it off.
 

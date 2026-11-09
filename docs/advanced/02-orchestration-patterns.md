@@ -90,7 +90,7 @@ If a job's pattern is wrong, ask the chart's questions in order: the check's hin
 ## Go further
 
 - [Run agents in parallel](https://code.claude.com/docs/en/agents): the official comparison of the ways Claude Code works on several tasks at once, and how to check on each.
-- [Fan out across files](https://code.claude.com/docs/en/best-practices#fan-out-across-files): `/batch` for a large migration, or your own loop of `claude -p` calls.
+- [Run sessions in parallel](https://code.claude.com/docs/en/best-practices#run-sessions-in-parallel) and [Run Claude from a script](https://code.claude.com/docs/en/best-practices#run-claude-from-a-script): `/batch` for one big mechanical change across many files, or your own loop of `claude -p` calls.
 - [Agent team token costs](https://code.claude.com/docs/en/costs#agent-team-token-costs): what drives a team's usage, and how to keep it small.
 
 ---

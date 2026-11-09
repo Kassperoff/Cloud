@@ -61,7 +61,7 @@ Delegate a task whose output you don't need in full, or that should run with res
    ```
 
    Without `--fix`, the bundled skill asks for a report only ([What the review reads and edits](https://code.claude.com/docs/en/code-review-local#what-the-review-reads-and-edits)). That instruction differs from the custom reviewer's tool restriction: the custom reviewer has no file-editing or shell tool. Run `git status --short` now, after both reviews, to inspect what actually happened ([Git status](https://git-scm.com/docs/git-status)).
-5. Compare the reports against the same diff. A reviewer asked to find gaps usually reports some, even when the work is sound: act on a finding that affects correctness or the requirements, after a targeted test shows it is real ([Add an adversarial review step](https://code.claude.com/docs/en/best-practices#add-an-adversarial-review-step)). Review and commit any justified fix and `.claude/agents/code-reviewer.md`.
+5. Compare the reports against the same diff. A reviewer asked to find gaps usually reports some, even when the work is sound: act on a finding that affects correctness or the requirements, after a targeted test shows it is real ([Review against your spec](https://code.claude.com/docs/en/best-practices#review-against-your-spec)). Review and commit any justified fix and `.claude/agents/code-reviewer.md`.
 
 ## Your turn
 
