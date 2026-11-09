@@ -116,14 +116,36 @@ export function cleanLine(verify: Verify, listed: readonly string[]) {
     : C.dirty(listed.length, ...some(listed));
 }
 
+// Names as a list: "a", "a and b", "a, b and c".
+const andList = (names: readonly string[]) =>
+  names.length > 1
+    ? `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`
+    : (names[0] ?? "");
+
+// What each probe looks for, by its name in PROBES (ticket 265).
+export const PROBE_LINES: Readonly<
+  Record<string, (args: readonly string[]) => string>
+> = {
+  worktrees: ([n]) => C.probe.worktrees(Number(n)),
+  "branch-ahead": ([branch = ""]) => C.probe.branchAhead(branch),
+  merged: (branches) => C.probe.merged(andList(branches), branches.length),
+  gone: ([path = ""]) => C.probe.gone(path),
+  pushed: () => C.probe.pushed,
+  removed: (paths) => C.probe.removed(andList(paths), paths.length),
+  todos: ([n]) => C.probe.todos(Number(n)),
+};
+
 // What a watched beat with no "Done when" line looks for, as its Check
 // line (ticket 350): a whole-tree git-clean beat's clean tree, a file beat's
-// file. Null for the other kinds, and for a git-clean beat that names paths:
-// its step asks for no change there (`rm .env`, nothing in samples/ changed),
-// so "left uncommitted" would invite a commit the step doesn't want.
+// file, a probe beat's probe (ticket 265). Null for the other kinds, and for
+// a git-clean beat that names paths: its step asks for no change there
+// (`rm .env`, nothing in samples/ changed), so "left uncommitted" would
+// invite a commit the step doesn't want.
 export function watchLine(verify: Verify): string | null {
   if (verify.kind === "git-clean") return verify.paths ? null : C.leftClean;
   if (verify.kind === "file") return C.saved(verify.path);
+  if (verify.kind === "probe")
+    return PROBE_LINES[verify.name]?.(verify.args) ?? null;
   return null;
 }
 

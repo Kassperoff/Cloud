@@ -75,6 +75,24 @@ export const C = {
   // beat looks for.
   leftClean: "nothing is left uncommitted",
   saved: (path: string) => `${path} is saved`,
+  // The same for a probe beat (ticket 265): one line for each probe in
+  // quest/engine/src/probes.ts, saying what its run in quest/host/src/probes.ts
+  // tests. `names` is a list already joined, and `n` how many it holds.
+  probe: {
+    worktrees: (n: number) =>
+      n === 1
+        ? "a worktree is under .claude/worktrees/"
+        : `at least ${String(n)} worktrees are under .claude/worktrees/`,
+    branchAhead: (branch: string) => `${branch} has a new commit`,
+    merged: (names: string, n: number) =>
+      `${names} ${n === 1 ? "is" : "are"} merged into your branch`,
+    gone: (path: string) => `no worktree is left at ${path}`,
+    pushed: "your branch is pushed to its remote",
+    removed: (names: string, n: number) =>
+      `${names} ${n === 1 ? "is" : "are"} deleted, and the deletion is pushed`,
+    todos: (n: number) =>
+      `TODO or FIXME is in ${n === 1 ? "a top-level folder" : `at least ${String(n)} top-level folders`}`,
+  },
   changedUnder: (n: number, under: string, shown: string, more: number) =>
     `${String(n)} file${n === 1 ? "" : "s"} changed under ${under}: ${shown}${more ? ` and ${String(more)} more` : ""}`,
   dirty: (n: number, shown: string, more: number) =>
