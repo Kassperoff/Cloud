@@ -2044,7 +2044,8 @@ function onProbe(
 // ---- the Learner's actions ---------------------------------------------------
 export const isDone = (st: BeatState | null | undefined) =>
   st?.status === "done" || st?.status === "already";
-// The y/n before the exact command: while it is up, only its answer acts.
+// The y/n before the exact command: while it is up, only its answer acts,
+// and done (step.markDone), which closes it.
 const yesNo = (s: EngineState) => Boolean(s.beat?.confirm) && !isDone(s.beat);
 // On the card, its beat not done and no y/n up: where an answer acts.
 const answering = (s: EngineState) => onCard(s) && !isDone(s.beat) && !yesNo(s);
@@ -2252,11 +2253,13 @@ const ACTIONS: ActionHandlers = {
     return true;
   },
   // Self, none and self-kind beats: the Learner says it is done, and the
-  // card goes on.
+  // card goes on. Done acts with the exact command's y/n up too (263): the
+  // Learner did the step without it, so the y/n closes unanswered.
   "step.markDone"(s, _a, effects) {
-    if (!answering(s) || openQuestion(s)) return false;
+    if (!onCard(s) || isDone(s.beat) || openQuestion(s)) return false;
     const beat = currentBeat(s);
     if (decidedBy(beat) !== "learner") return false;
+    beatState(s).confirm = false;
     beatState(s).status = "done";
     advance(s, effects);
     return true;
