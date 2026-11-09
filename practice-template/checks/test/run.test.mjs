@@ -886,6 +886,8 @@ test('b-5 counts each kind of line the lesson calls a course line, and no linkch
     '- The capstone brief is `../capstone/beginner-bug.md`.',
     '- CI is in `.github/workflows/`.',
     '- The dev container is in `.devcontainer/`.',
+    '- Lesson material is in `practice/`.',
+    '- The app saves progress in `.practice/`.',
   ];
   for (const line of course) assert.match(String(verdict(line)), /describes the course/, line);
   const linkcheck = [

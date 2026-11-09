@@ -24,11 +24,11 @@ const isSource = (/** @type {string} */ f) => /^src\/.+\.[cm]?js$/i.test(f) && !
 // `npm run <script>`, with any options before the script's name skipped.
 const NPM_RUN = /npm run(?:-script)?(?:\s+--?[\w-]+(?:=\S+)?)*\s+([A-Za-z0-9:._][A-Za-z0-9:._-]*)/g;
 // The course lines W2 has the Learner cut: a line about the course's folders
-// (`checks/`, `learn/`, `capstone/`, `.github/`, `.devcontainer/`) or one
-// naming a course script. `check` is a script in project/package.json, so the
+// (`checks/`, `learn/`, `capstone/`, `practice/`, `.practice/`, `.github/`,
+// `.devcontainer/`) or one naming a course script. `check` is a script in project/package.json, so the
 // item for real scripts can't catch it. A folder counts at the start of a
 // path or after `../`, so a URL such as `.../docs/en/learn/x` doesn't.
-const COURSE_FOLDER = /(?:(?<![\w./-])|(?<=\.\.\/))(?:checks|learn|capstone|\.github|\.devcontainer)\//;
+const COURSE_FOLDER = /(?:(?<![\w./-])|(?<=\.\.\/))(?:checks|learn|capstone|\.?practice|\.github|\.devcontainer)\//;
 const COURSE_SCRIPTS = new Set(['check', 'learn', 'test:checks']);
 const isCourseLine = (/** @type {string} */ text) => COURSE_FOLDER.test(text)
   || [...text.matchAll(NPM_RUN)].some((m) => COURSE_SCRIPTS.has(/** @type {string} */ (m[1])));
