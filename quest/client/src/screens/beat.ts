@@ -41,11 +41,16 @@ export interface PrimaryAction {
 /**
  * The action the moment needs, or null while a question waits for a pick
  * (its answers are the action). Check again shows on a checked or watched
- * beat in every state, before the first look too.
+ * beat in every state, before the first look too. A done beat goes on with
+ * Continue to the step's next beat, and with Next step from its last.
  */
 export function primaryAction(beat: BeatView): PrimaryAction | null {
   if (isDone(beat))
-    return { type: "step.continue", label: "Next step", variant: "primary" };
+    return {
+      type: "step.continue",
+      label: beat.last ? "Next step" : "Continue",
+      variant: "primary",
+    };
   if (asking(beat)) return null;
   switch (decidedByOf(beat)) {
     case "check":

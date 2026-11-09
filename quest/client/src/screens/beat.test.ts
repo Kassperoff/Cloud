@@ -51,16 +51,28 @@ describe("decidedByOf", () => {
 describe("primaryAction", () => {
   test.each<[string, Partial<BeatView>, string | null, string | null]>([
     [
-      "done",
-      { status: "done", decidedBy: "watch" },
+      "done, the step's last beat",
+      { status: "done", decidedBy: "watch", last: true },
       "step.continue",
       "Next step",
     ],
     [
-      "already done",
-      { status: "already", decidedBy: "check" },
+      "already done, the step's last beat",
+      { status: "already", decidedBy: "check", last: true },
       "step.continue",
       "Next step",
+    ],
+    [
+      "done, a beat before the step's last",
+      { status: "done", decidedBy: "watch", last: false },
+      "step.continue",
+      "Continue",
+    ],
+    [
+      "already done, a beat before the step's last",
+      { status: "already", decidedBy: "check", last: false },
+      "step.continue",
+      "Continue",
     ],
     ["asking", { kind: "predict", options: [{ text: "a" }] }, null, null],
     ["a checked beat", { decidedBy: "check" }, "check.run", "Check again"],
