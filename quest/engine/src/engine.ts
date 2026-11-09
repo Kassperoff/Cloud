@@ -689,6 +689,17 @@ export const workFolder = (s: EngineState) =>
 export const evidence = (s: EngineState) =>
   onCard(s) ? (currentBeat(s).evidence ?? null) : null;
 
+// The line of a check's evidence file to show, for a result about the beat
+// on screen's own evidence file: the pattern its evidence line names.
+const evidenceLine = (
+  s: EngineState,
+  lesson: string,
+  path: string | null | undefined,
+) =>
+  onCard(s) && lesson === s.lesson && path === evidence(s)
+    ? (currentBeat(s).evidenceLine ?? null)
+    : null;
+
 // Whether the app opens with a look at the lesson's check: a Learner
 // welcomed back to a lesson with a page that is not complete.
 export const opensWithCheck = (s: EngineState) =>
@@ -1711,7 +1722,14 @@ function onCheck(
   effects: Effect[],
   rRuns: boolean,
 ) {
-  const ev = { ...input, evidence: checkEvidenceOf(input.read, input.path) };
+  const ev = {
+    ...input,
+    evidence: checkEvidenceOf(
+      input.read,
+      input.path,
+      evidenceLine(s, input.lesson, input.path),
+    ),
+  };
   const before = s.checks[ev.lesson];
   s.checks[ev.lesson] = {
     ...s.checks[ev.lesson],
@@ -2425,7 +2443,10 @@ function resultFolder(s: EngineState, ev: HostInputOf<HostInput["type"]>) {
 function lookAt(s: EngineState, ev: EngineInput) {
   const w = watching(s);
   if (ev.type === "check" && w?.check?.lesson === ev.lesson)
-    return JSON.stringify([ev.items, checkEvidenceOf(ev.read, ev.path)]);
+    return JSON.stringify([
+      ev.items,
+      checkEvidenceOf(ev.read, ev.path, evidenceLine(s, ev.lesson, ev.path)),
+    ]);
   if (ev.type === "file" && w?.file === ev.path) {
     // A beat watches a file only for a verify that reads one.
     const verify = currentBeat(s).verify;

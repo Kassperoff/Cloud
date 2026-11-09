@@ -1346,6 +1346,78 @@ test("a fresh check waits for new work, not for what an earlier step left behind
   assert.deepEqual(again.state.progress["b-2"].stamps, {});
 });
 
+test("a check's evidence line can name the line of its file a pass shows, the first that matches (d264-i7)", () => {
+  const path = ".practice/b-2-before.txt";
+  // DEMO_B2's Y1, a fresh check on the list W1 saved.
+  const Y1 = `- verify: check 0 fresh\n- watching: ${path}\n- evidence: ${path}`;
+  const withY1 = (lines) => DEMO_B2.replace(Y1, lines);
+  const y1Of = (text) =>
+    parseLesson(text, "b-2.md").steps.find((s) => s.id === "Y1").beats[0];
+  const named = y1Of(withY1(`${Y1} link-count`));
+  assert.equal(named.evidence, path, "the path alone is the file to read");
+  assert.equal(named.evidenceLine, "link-count");
+  assert.equal(y1Of(DEMO_B2).evidenceLine, undefined);
+  assert.throws(
+    () => y1Of(withY1(`${Y1} link-(`)),
+    /b-2\.md:\d+: an evidence pattern that doesn't compile/,
+  );
+  assert.throws(
+    () =>
+      y1Of(
+        withY1(`- verify: file ${path} fresh\n- evidence: ${path} link-count`),
+      ),
+    /b-2\.md:\d+: only a check's evidence names the line it shows/,
+  );
+
+  const page = [
+    "<!doctype html>",
+    "<script>",
+    "document.querySelector('#link-count').textContent = 'ready';",
+    "</script>",
+  ];
+  const bytes = Buffer.from(page.join("\n"));
+  assert.equal(
+    checkEvidenceOf(bytes, ".practice/demo.html", "link-count"),
+    page[2],
+  );
+  assert.equal(
+    checkEvidenceOf(bytes, ".practice/demo.html", "link-total"),
+    page[0],
+    "with no line matching, the file shows its first line",
+  );
+
+  // On the card, the pass shows the matching line, not the whole list.
+  const d = driver({
+    course: courseWith({ "b-2": withY1(`${Y1} querySelector`) }),
+    saved: save({
+      lessons: {
+        "b-1": b1Done,
+        "b-2": {
+          step: "Y1",
+          beat: 0,
+          warm: ["R1", "R2"],
+          levels: ["challenge"],
+        },
+      },
+    }),
+  });
+  d.open();
+  assert.equal(stepOf(d.state).id, "Y1");
+  const result = (stamp) => ({
+    type: "check",
+    lesson: "b-2",
+    items: [item(true)],
+    read: bytes,
+    path,
+    stamp,
+  });
+  d.send(result("A"));
+  assert.equal(d.state.beat.status, "waiting");
+  d.send(result("B"));
+  assert.equal(d.state.beat.status, "done");
+  assert.equal(d.state.beat.evidence, page[2]);
+});
+
 // was learn-flow:584
 // spec: verify.value.file
 test("a file check is done once its file holds a line, and a fresh one once it changed", () => {

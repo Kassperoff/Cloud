@@ -152,17 +152,27 @@ export function evidenceOf(buf: Buffer | null | undefined) {
 // so a list a Check line names shows every entry; any other file shows the
 // one line evidenceOf picks. As for one line, a leading front matter block
 // goes, and so does a line that only opens one. A longer list shows its
-// first EVIDENCE_ROWS and how many more lines it holds.
+// first EVIDENCE_ROWS and how many more lines it holds. A beat whose
+// evidence line names a pattern (`evidence: <path> <regex>`) shows the
+// first line that matches it instead, so a repair shows the line it fixed
+// (d264-i7's Y5 showed `<!doctype html>`); with no line matching, the file
+// shows as it would without one.
 export const EVIDENCE_ROWS = 8;
 export function checkEvidenceOf(
   buf: Buffer | null | undefined,
   path: string | null | undefined,
+  line?: string | null,
 ) {
-  if (!path?.toLowerCase().endsWith(".txt")) return evidenceOf(buf);
   if (!buf) return null;
   const binary = binaryOf(buf);
   if (binary) return binary;
   const text = textOf(buf);
+  if (line) {
+    const re = new RegExp(line);
+    const hit = text.split(/\r?\n/).find((l) => re.test(l));
+    if (hit !== undefined) return oneRow(hit);
+  }
+  if (!path?.toLowerCase().endsWith(".txt")) return firstOf(text);
   const lines = text
     .split(/\r?\n/)
     .map((l) => l.trim())

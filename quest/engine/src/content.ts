@@ -136,6 +136,9 @@ export interface Beat {
   doneLabel?: string;
   watching?: string;
   evidence?: string;
+  // `evidence: <path> <regex>`: the line of the evidence file a passed
+  // check shows, the first that matches, in place of the one it picks.
+  evidenceLine?: string;
   safety?: string;
   skill?: string;
   ask?: string;
@@ -1508,8 +1511,23 @@ function parseVerify(
   file: string,
   { PROBES, probeError }: NonNullable<ParseContext["probes"]>,
 ): Verify {
-  if (beat.kind !== "do")
+  const at = `${file}:${String(beat.line)}`;
+  // `evidence: <path> <regex>`: the path, then the line a pass shows.
+  const shows = beat.evidence?.match(/^(\S+)\s+(\S.*)$/);
+  if (shows) {
+    beat.evidence = must(shows[1], `${at}: an evidence path`);
+    beat.evidenceLine = must(shows[2], `${at}: an evidence pattern`);
+    try {
+      new RegExp(beat.evidenceLine);
+    } catch {
+      throw new Error(`${at}: an evidence pattern that doesn't compile`);
+    }
+  }
+  if (beat.kind !== "do") {
+    if (beat.evidenceLine)
+      throw new Error(`${at}: only a check's evidence names the line it shows`);
     return { kind: beat.kind === "self" ? "self" : "answer" };
+  }
   // Its line's text: each beat's verify is parsed once.
   const v = (beat.verify as string | undefined) ?? "none";
   if (v === "check all") return { kind: "check", all: true };
@@ -1523,7 +1541,8 @@ function parseVerify(
   const extra: { fresh?: true; since?: string | null } = fresh
     ? { fresh: true, since: fresh[1] ?? null }
     : {};
-  const at = `${file}:${String(beat.line)}`;
+  if (beat.evidenceLine && base.split(" ")[0] !== "check")
+    throw new Error(`${at}: only a check's evidence names the line it shows`);
   if (base === "answer")
     throw new Error(
       `${at}: verify: answer is only for an ask beat; this do beat needs beat: ask`,
