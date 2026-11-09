@@ -18,7 +18,8 @@ const LINK = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
 // modifier key goes there (263).
 const PAGE = /^(?![a-z][a-z0-9+.-]*:)(?!\/)(?!\.\.?\/)([^#]+\.md)(?:#(.+))?$/i;
 
-// A link's words may hold code, as in [`tdd` skill](url) (d264-i1, i-6).
+// A link's or a bold span's words may hold code, as in [`tdd` skill](url)
+// (d264-i1, i-6) or **Yes, and don't ask again for `<name>`** (d265-a3).
 const labelOf = (label: string) =>
   label.split(/(`[^`]+`)/).map((part, i): ReactNode =>
     part.length > 2 && part.startsWith("`") && part.endsWith("`") ? (
@@ -41,7 +42,7 @@ export function InlineText({ text }: { text: string }) {
         </code>
       );
     if (part.length > 4 && part.startsWith("**") && part.endsWith("**"))
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
+      return <strong key={i}>{labelOf(part.slice(2, -2))}</strong>;
     const link = LINK.exec(part);
     if (link) {
       const [, label = "", href = ""] = link;
