@@ -31,7 +31,7 @@ import {
   type LessonContent,
   type Step,
 } from "./content.ts";
-import { evidenceOf, grewFrom, judge } from "./holds.ts";
+import { checkEvidenceOf, grewFrom, judge } from "./holds.ts";
 import { EVENT_TYPES, momentsOf } from "./moments.ts";
 import {
   cleanListed,
@@ -1698,7 +1698,7 @@ function onCheck(
   effects: Effect[],
   rRuns: boolean,
 ) {
-  const ev = { ...input, evidence: evidenceOf(input.read) };
+  const ev = { ...input, evidence: checkEvidenceOf(input.read, input.path) };
   const before = s.checks[ev.lesson];
   s.checks[ev.lesson] = {
     ...s.checks[ev.lesson],
@@ -2397,7 +2397,7 @@ function resultFolder(s: EngineState, ev: HostInputOf<HostInput["type"]>) {
 function lookAt(s: EngineState, ev: EngineInput) {
   const w = watching(s);
   if (ev.type === "check" && w?.check?.lesson === ev.lesson)
-    return JSON.stringify([ev.items, evidenceOf(ev.read)]);
+    return JSON.stringify([ev.items, checkEvidenceOf(ev.read, ev.path)]);
   if (ev.type === "file" && w?.file === ev.path) {
     // A beat watches a file only for a verify that reads one.
     const verify = currentBeat(s).verify;

@@ -125,6 +125,39 @@ export function evidenceOf(buf: Buffer | null | undefined) {
   return binaryOf(buf) ?? firstOf(textOf(buf));
 }
 
+// What a check's evidence file shows on its passing look. A plain list, a
+// `.txt` file, shows each line that says something (263), as one screen row,
+// so a list a Check line names shows every entry; any other file shows the
+// one line evidenceOf picks. As for one line, a leading front matter block
+// goes, and so does a line that only opens one. A longer list shows its
+// first EVIDENCE_ROWS and how many more lines it holds.
+export const EVIDENCE_ROWS = 8;
+export function checkEvidenceOf(
+  buf: Buffer | null | undefined,
+  path: string | null | undefined,
+) {
+  if (!path?.toLowerCase().endsWith(".txt")) return evidenceOf(buf);
+  if (!buf) return null;
+  const binary = binaryOf(buf);
+  if (binary) return binary;
+  const text = textOf(buf);
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const end = lines[0] === "---" ? lines.indexOf("---", 1) : -1;
+  const rows = lines
+    .slice(end + 1)
+    .filter((l) => !OPENS.includes(l))
+    .map((l) => oneRow(l))
+    .filter(Boolean);
+  const shown = rows.slice(0, EVIDENCE_ROWS);
+  const last = shown.pop();
+  if (last === undefined) return firstOf(text);
+  const more = rows.length - EVIDENCE_ROWS;
+  return [...shown, more > 0 ? C.andMore(last, more) : last].join("\n");
+}
+
 // The value at a dotted key path, or `undefined` where any part is missing.
 // An array's parts are its indexes, so `length` is no key of one.
 function at(value: unknown, key: string) {
