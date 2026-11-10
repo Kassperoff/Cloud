@@ -1,6 +1,6 @@
 ---
 lesson: i-capstone
-stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
+stamp: "Verified against Claude Code v2.1.311 (stable) on 2026-11-09"
 badge: Intermediate
 needs: [jq python3]
 ---
