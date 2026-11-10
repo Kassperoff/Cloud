@@ -1384,6 +1384,41 @@ describe("Lesson workspace, every step (246)", () => {
     expect(document.querySelector("[data-ran-in]")).toBeNull();
   });
 
+  test("row C: no run-it-too line in a Lesson in the Learner's own repository", () => {
+    renderConnected(
+      "/lesson/a-6/step",
+      snapshotOf(
+        {
+          ...ranInWork(watchPassed, "/home/ali/repo"),
+          id: "a-6",
+          level: "advanced",
+        },
+        { course: fullCourse },
+      ),
+    );
+    expect(document.querySelector("[data-pip-target=lines]")).not.toBeNull();
+    expect(document.querySelector("[data-ran-in]")).toBeNull();
+    expect(document.body.textContent).not.toContain(RUN_IT_TOO);
+  });
+
+  test("row C: no run-it-too line on a passed step other than the Check", () => {
+    const passed = ranInWork(watchPassed, "/home/ali/work");
+    renderConnected(
+      "/lesson/b-1/step",
+      snapshotOf({
+        ...passed,
+        step: passed.step && {
+          ...passed.step,
+          id: "Y1",
+          part: "Your turn",
+          title: "Check the onboarding notes",
+        },
+      }),
+    );
+    expect(document.querySelector("[data-pip-target=lines]")).not.toBeNull();
+    expect(document.querySelector("[data-ran-in]")).toBeNull();
+  });
+
   test("row C: no run-it-too line before the Check passes", () => {
     renderConnected(
       "/lesson/b-1/step",
