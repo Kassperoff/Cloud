@@ -3,6 +3,7 @@
 import { test } from "vitest";
 import assert from "node:assert/strict";
 import {
+  altOf,
   asksFolder,
   beatOf,
   checkItems,
@@ -293,20 +294,31 @@ test("Intermediate and Advanced default to the practice copy's project/ folder",
 });
 
 // spec: newcopy.by-lesson-id
-test("a-5 and a-capstone run in the project/ folder of their new copy", () => {
-  for (const id of ["a-5", "a-capstone"]) {
+// a-5's page works at the new copy's root, where GitHub reads workflows
+// (265), so it runs there; a-capstone runs in the copy's project/, reading
+// the root second, as the practice copy's project/ does (ticket 295).
+test("a-capstone runs in the project/ folder of its new copy, and a-5 at that copy's root", () => {
+  for (const [id, dir] of [
+    ["a-5", NEW_COPY],
+    ["a-capstone", NEW_PROJECT],
+  ]) {
     const d = overview(id);
     assert.equal(lastOf(d.effects, "check"), undefined, id);
     assert.equal(folderOf(d.state), null, id);
     give(d, id, NEW_COPY);
     assert.equal(d.state.folders[id], NEW_COPY, id);
-    assert.equal(folderOf(d.state), NEW_PROJECT, id);
-    assert.equal(firstCheckDir(d), NEW_PROJECT, id);
+    assert.equal(folderOf(d.state), dir, id);
+    assert.equal(firstCheckDir(d), dir, id);
+    assert.deepEqual(
+      altOf(d.state, dir),
+      id === "a-5" ? {} : { alt: NEW_COPY },
+      id,
+    );
     // Its project/ typed in full saves the copy itself.
     const typed = overview(id);
     give(typed, id, NEW_PROJECT);
     assert.equal(typed.state.folders[id], NEW_COPY, id);
-    assert.equal(folderOf(typed.state), NEW_PROJECT, id);
+    assert.equal(folderOf(typed.state), dir, id);
   }
 });
 

@@ -203,6 +203,7 @@
       "steps": "course/steps/a-5.md",
       "check": "a-5",
       "folder": "new-copy",
+      "root": true,
       "slow": []
     },
     {

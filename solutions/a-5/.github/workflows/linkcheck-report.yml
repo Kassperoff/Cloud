@@ -12,12 +12,16 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
       - uses: anthropics/claude-code-action@v1.0.258
         with:
           prompt: |
-            Read the Markdown files in this repository and report each relative
-            link whose target file is missing, as file:line and the target.
+            Run `node project/src/cli.js project/samples`. For each broken link
+            it reports, explain in one sentence why it is broken.
             Change no file.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
-          claude_args: --max-turns 5 --allowedTools "Read,Grep,Glob"
+          claude_args: --max-turns 5 --allowedTools "Bash(node project/src/cli.js *)"
+          display_report: true

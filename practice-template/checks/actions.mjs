@@ -9,10 +9,16 @@
 // never runs a workflow, `gh` or Claude Code.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { openRepo } from './repo.mjs';
 /** @import { Repo } from './repo.mjs' */
 
 export const WORKFLOWS = '.github/workflows';
-// GitHub reads workflow files only directly in .github/workflows/.
+// GitHub reads workflow files only directly in .github/workflows/, at the
+// repository's root ("GitHub searches the `.github/workflows` directory in
+// the root of your repository":
+// https://docs.github.com/en/actions/concepts/workflows-and-actions/workflows).
+// A copy's checks run in project/, below that root, so
+// every read here names its paths from the root, wherever the check runs.
 const WORKFLOW_FILE = /^\.github\/workflows\/[^/]+\.ya?ml$/;
 const ACTION = /^anthropics\/claude-code-action(?:@(.*))?$/i;
 
@@ -466,7 +472,7 @@ const z = (/** @type {string} */ text) => text.split('\0').filter(Boolean);
  */
 function listFiles(repo, commit) {
   try {
-    return z(repo.gitLocal('ls-tree', '-z', commit, '--', `${WORKFLOWS}/`))
+    return z(repo.gitLocal('ls-tree', '-z', '--full-tree', commit, '--', `${WORKFLOWS}/`))
       .map((entry) => entry.match(/^\d+ (\w+) ([0-9a-f]+)\t(.*)$/s))
       .filter((m) => m && m[1] === 'blob' && WORKFLOW_FILE.test(/** @type {string} */ (m[3])))
       .map((m) => ({ blob: /** @type {string} */ (/** @type {RegExpMatchArray} */ (m)[2]), path: /** @type {string} */ (/** @type {RegExpMatchArray} */ (m)[3]) }));
@@ -533,7 +539,7 @@ export function claudeHistory(repo) {
     /** @type {string[]} */
     let commits = [];
     try {
-      commits = repo.gitLocal('log', '--full-history', '--format=%H', '--', WORKFLOWS).split('\n').filter(Boolean);
+      commits = repo.gitLocal('log', '--full-history', '--format=%H', '--', `:/${WORKFLOWS}`).split('\n').filter(Boolean);
     } catch {
       // No commits yet.
     }
@@ -542,14 +548,29 @@ export function claudeHistory(repo) {
   return cache.history;
 }
 
-// Workflow files in the working tree that run the action while HEAD's copy
-// doesn't (or HEAD has none), each `{ path, tracked }`.
+// The repository's root, opened for reads: the git root above a copy's
+// project/, or the folder itself at its own root or outside git.
+/** @param {Repo} repo */
+export function rootRepo(repo) {
+  let top;
+  try {
+    top = repo.prefix ? repo.top : null;
+  } catch {
+    top = null;
+  }
+  return top ? openRepo(top) : repo;
+}
+
+// Workflow files in the root's working tree that run the action while
+// HEAD's copy doesn't (or HEAD has none), each `{ path, tracked }`, with
+// `path` named from the root.
 /** @param {Repo} repo */
 export function uncommittedWorkflows(repo) {
+  const root = rootRepo(repo);
   /** @type {string[]} */
   let names = [];
   try {
-    names = readdirSync(join(repo.dir, WORKFLOWS)).filter((n) => /\.ya?ml$/.test(n)).sort();
+    names = readdirSync(join(root.dir, WORKFLOWS)).filter((n) => /\.ya?ml$/.test(n)).sort();
   } catch {
     return [];
   }
@@ -557,12 +578,12 @@ export function uncommittedWorkflows(repo) {
   const out = [];
   for (const name of names) {
     const path = `${WORKFLOWS}/${name}`;
-    const text = repo.read(path);
+    const text = root.read(path);
     if (text === null || !readWorkflow(text).steps.length) continue;
     /** @type {string | null} */
     let committed = null;
     try {
-      committed = repo.git('show', `HEAD:./${path}`);
+      committed = root.git('show', `HEAD:./${path}`);
     } catch {
       // Not in HEAD.
     }
@@ -571,14 +592,15 @@ export function uncommittedWorkflows(repo) {
   return out;
 }
 
-// The blob HEAD holds at `path`, or null.
+// The blob HEAD holds at `path`, named from the root, or null. It reads from
+// the root, so `./` is the root there.
 /**
  * @param {Repo} repo
  * @param {string} path
  */
 export function headBlob(repo, path) {
   try {
-    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
+    return rootRepo(repo).git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
   } catch {
     return null;
   }

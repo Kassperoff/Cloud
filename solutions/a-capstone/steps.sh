@@ -26,12 +26,14 @@ git merge -q --no-edit worktree-team-kit
 git worktree remove "$wt/review-script"
 git worktree remove "$wt/team-kit"
 printf '%s\n' '{"type":"result","subtype":"success","is_error":false,"result":"No issues found in the staged change.","session_id":"00000000-0000-0000-0000-000000000000","num_turns":2,"total_cost_usd":0.08}' > .practice/a-capstone-run.json
-mkdir -p .github/workflows
-cp "$SOLUTION/.github/workflows/claude-review.yml" .github/workflows/claude-review.yml
-git add .github/workflows/claude-review.yml
+# GitHub reads workflows only at the copy's root, above project/.
+review="$COPY/.github/workflows/claude-review.yml"
+mkdir -p "$COPY/.github/workflows"
+cp "$SOLUTION/.github/workflows/claude-review.yml" "$review"
+git add "$review"
 git commit -q -m "Review pull requests with the team review skill"
 printf '%s\n' '[{"conclusion":"success","databaseId":2,"event":"pull_request","status":"completed","workflowName":"Claude review"}]' > .practice/a-capstone-ci.json
-git rm -q .github/workflows/claude-review.yml
+git rm -q "$review"
 git commit -q -m "Remove the pull request review workflow"
 # The bug fix and its test land together, last.
 cp "$SOLUTION/src/check-links.js" src/check-links.js

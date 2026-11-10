@@ -157,7 +157,12 @@ export interface OverviewLesson extends LessonHead {
   /** The Lesson's Check items, in order: what the check looks for. */
   check: string[];
   /** Each You need line here and the commands no PATH folder has: [] when all are found, null until the host has answered for every one. */
-  needs: { quote: string; missing: string[] | null }[];
+  needs: {
+    quote: string;
+    missing: string[] | null;
+    /** False on a line that names no command, such as a credential: nothing to look up on PATH. */
+    onPath?: false;
+  }[];
   /** What the overview has to say before the Learner starts. */
   notes: OverviewNote[];
   /** Where this Lesson's Work folder is, while the overview asks. */

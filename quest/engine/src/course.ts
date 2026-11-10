@@ -37,6 +37,7 @@ export const PATH: PathEntry[] = coursePath(manifest).map((entry) => ({
     ? { folder: "copy" as const }
     : {}),
   ...(entry.folder === "new-copy" ? { newCopy: true as const } : {}),
+  ...(entry.root ? { root: true as const } : {}),
   // A lesson of a level that practises in a work folder (the engine's
   // levelKey reads it, so engine.ts imports no file-reading module).
   ...(entry.folder === "work" ? { work: true as const } : {}),

@@ -12,8 +12,10 @@
 // starts by hand, never stands in for it either. Who can start a run, and which issue or
 // comment text reaches Claude as input, is a judgment the check can't see, so
 // the lesson self-checks it. The Advanced capstone reuses the workflow items, as one item, with its
-// own events.
-import { claudeArgWords, claudeHistory, claudeWorkflowsAt, headBlob, uncommittedWorkflows } from '../actions.mjs';
+// own events. The page has the Learner at the copy's root, where GitHub reads
+// workflows, while `npm run check` runs in project/: the workflows, and
+// first the saved runs, are read at the root.
+import { claudeArgWords, claudeHistory, claudeWorkflowsAt, headBlob, rootRepo, uncommittedWorkflows } from '../actions.mjs';
 import { ruleList } from '../claude-args.mjs';
 /** @import { WorkflowFile, Step, Value } from '../actions.mjs' */
 /** @import { Repo } from '../repo.mjs' */
@@ -261,7 +263,7 @@ export function chosenWorkflow(repo, triggers, options = LESSON) {
  */
 function changed(repo, path) {
   try {
-    repo.git('diff', '--quiet', 'HEAD', '--', path);
+    repo.git('diff', '--quiet', 'HEAD', '--', `:/${path}`);
     return false;
   } catch {
     return true;
@@ -442,7 +444,8 @@ export function dispatchedRun(record = RUNS, file = WORKFLOW) {
     text: `${code(record)} shows a completed, successful manual run on a commit that holds the workflow`,
     local: true,
     check(repo) {
-      const text = repo.read(record);
+      // Saved at the copy's root, as the page has it, or in this folder.
+      const text = rootRepo(repo).read(record) ?? repo.read(record);
       if (text === null || !text.trim()) return `There is no ${code(record)} yet. Once your run finishes, save the list: ${save}.`;
       let value;
       try {

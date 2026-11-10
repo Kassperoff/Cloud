@@ -60,11 +60,14 @@ const PLUGIN = {
 // A Claude API key or OAuth token written out, as lesson 5's check spots one
 // in a workflow file. checks/ holds the checks' own made-up keys.
 const KEY = 'sk-ant-[A-Za-z0-9_-]{20,}';
-const OWN = ':(exclude)checks/';
+// The whole repository, from its root, where the review workflow is, though
+// the check runs in a copy's project/.
+const ALL = ':(top)';
+const OWN = ':(top,exclude)checks/';
 
 const short = (/** @type {string} */ sha) => sha.slice(0, 7);
 
-// Where `commit` holds a key, each `{ path, line }`, by path. The key itself
+// Where `commit` holds a key, each `{ path, line }`, by path from the root. The key itself
 // is never kept, so no hint can print it.
 /**
  * @param {Repo} repo
@@ -73,7 +76,7 @@ const short = (/** @type {string} */ sha) => sha.slice(0, 7);
 function keysAt(repo, commit) {
   let out;
   try {
-    out = repo.gitLocal('grep', '--no-color', '-I', '-n', '-z', '-E', KEY, commit, '--', '.', OWN);
+    out = repo.gitLocal('grep', '--no-color', '--full-name', '-I', '-n', '-z', '-E', KEY, commit, '--', ALL, OWN);
   } catch (error) {
     if (/** @type {{ status?: number | null }} */ (error).status === 1) return [];
     throw error;
