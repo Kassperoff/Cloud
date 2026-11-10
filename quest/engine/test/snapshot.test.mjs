@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import {
   FACTS,
+  PROJECT,
   NEW_COPY,
   checkError,
   checkItems,
@@ -1069,6 +1070,23 @@ test("a run line's <your repo> shows the Work folder, shell-quoted when it has a
     texts.join("\n"),
   );
   assert.ok(texts.every((t) => !t.includes("<your repo>")));
+});
+
+test("a self-check beat that runs nothing keeps its step's folder: a-7's Check stays in the copy (d265-a7)", () => {
+  const MINE = "/home/ali/code/my-app";
+  const placeAt = (beat) =>
+    view(
+      at(
+        "a-7",
+        { step: "C", beat },
+        { saved: { folders: { advanced: MINE } } },
+      ),
+    ).step.where;
+  const check = placeAt(0);
+  assert.equal(check.kind, "shell");
+  assert.equal(check.folder, PROJECT, "the check runs from the copy");
+  assert.equal(beatOf(at("a-7", { step: "C", beat: 1 }).state).kind, "self");
+  assert.deepEqual(placeAt(1), check, "the self-check names the same place");
 });
 
 test("an i-1 step in the Learner's own repository names that folder", () => {

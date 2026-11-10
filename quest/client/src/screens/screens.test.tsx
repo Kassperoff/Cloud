@@ -1974,8 +1974,8 @@ describe("Lesson workspace, the check rung on a Not yet", () => {
     },
   });
   /**
-   * The words, without code-span marks: a drawn span loses its marks. (A
-   * double-backtick span, b-5's "rule missing", keeps a stray mark today.)
+   * The words, without code-span marks: a drawn span loses its marks, and a
+   * double-backtick span, b-5's "rule missing", shows the backticks inside it.
    */
   const shown = (message: string) => message.replaceAll("`", "");
   const CLIPS = /\b(truncate|line-clamp-\d+|text-ellipsis|max-h-\S+|h-\d+)\b/;
