@@ -3,7 +3,7 @@ lesson: i-capstone
 title: "Intermediate capstone: get a repository ready for a new teammate"
 source: docs/intermediate/capstone.md
 source-commit: 676831f
-stamp: "Verified against Claude Code v2.1.309 (stable) on 2026-11-02"
+stamp: "Verified against Claude Code v2.1.311 (stable) on 2026-11-09"
 page: https://github.com/wesammustafa/Claude-Code-Quest/blob/main/docs/intermediate/capstone.md
 stuck: https://github.com/wesammustafa/Claude-Code-Quest/issues/new?template=lesson-feedback.yml&lesson=i-capstone
 next: a-1
@@ -154,7 +154,7 @@ needs: [jq python3]
 - verify: self
 - done-label: I reproduced it
 - goal: "Reproduce the malformed-percent bug in `capstone/intermediate-bug.md` with your link-check workflow"
-- hint: "a link such as `[broken](bad%.md)` crashes the checker instead of producing its normal broken-link report."
+- hint: "a link such as `[broken](bad%.md)` stops the checker before it reports any link."
 - beat: do
 - verify: self
 - done-label: I saw red and green
