@@ -489,8 +489,14 @@ function placeOf(s: EngineState, step: Step, beat: Beat) {
   const root = projectDir(s);
   const level = levelKey(s);
   const levelDir = level ? levelFolder(s, level) : root;
-  const fromCopy = [...beat.lines, ...beat.bottom].some((l) =>
-    l.text.includes("<your repo>"),
+  // A self-check beat that shows no command runs nothing, so it keeps the
+  // place of the step's other beats (d265-a7, a-7's Check).
+  const runsNothing =
+    beat.kind === "self" &&
+    beat.bottom.length === 0 &&
+    !beat.lines.some((l) => l.key === "run");
+  const fromCopy = (runsNothing ? step.beats : [beat]).some((b) =>
+    [...b.lines, ...b.bottom].some((l) => l.text.includes("<your repo>")),
   );
   if (dir !== root && !fromCopy) return dir;
   return dir !== root || levelDir !== root ? root : null;

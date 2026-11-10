@@ -24,6 +24,42 @@ test("shows backticks as code and double stars as bold", () => {
   );
 });
 
+test("code keeps a space at one end and shows it (d265-a7)", () => {
+  const { container } = render(
+    <p>
+      <InlineText text="Deny rules stop `git push`, each with the trailing ` *`" />
+    </p>,
+  );
+  const codes = container.querySelectorAll("code");
+  expect(codes[1]?.textContent).toBe(" *");
+  expect(codes[1]).toHaveClass("whitespace-break-spaces");
+});
+
+test("code drops one space from each end only when both ends have one, as CommonMark does", () => {
+  const { container } = render(
+    <p>
+      <InlineText text="` a ` and `  b  ` and `c ` and `  `" />
+    </p>,
+  );
+  expect(
+    [...container.querySelectorAll("code")].map((c) => c.textContent),
+  ).toEqual(["a", " b ", "c ", "  "]);
+});
+
+test("a double-backtick span is one code span that keeps the backticks inside it", () => {
+  const { container } = render(
+    <p>
+      <InlineText text="No line like ``- Files in `src/` start with `// MIT`.``. Add it." />
+    </p>,
+  );
+  expect(
+    [...container.querySelectorAll("code")].map((c) => c.textContent),
+  ).toEqual(["- Files in `src/` start with `// MIT`."]);
+  expect(container.querySelector("p")?.textContent).toBe(
+    "No line like - Files in `src/` start with `// MIT`.. Add it.",
+  );
+});
+
 test("code inside a link's words shows as code, not backticks", () => {
   const { container } = render(
     <p>
