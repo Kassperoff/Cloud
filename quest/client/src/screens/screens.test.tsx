@@ -410,7 +410,7 @@ describe("Lesson overview", () => {
     expect(page.posts).toEqual([{ type: "lesson.open", lesson: "b-2" }]);
   });
 
-  test("each You need line shows once, found, missing or still looked for", () => {
+  test("each You need line shows once, found, missing, still looked for, or with nothing to look up", () => {
     renderConnected(
       "/lesson/b-1",
       snapshotOf({
@@ -419,6 +419,7 @@ describe("Lesson overview", () => {
           { quote: "You need `python3`.", missing: [] },
           { quote: "You need `jq` and `yq`.", missing: ["jq", "yq"] },
           { quote: "You need `bwrap` on Linux.", missing: null },
+          { quote: "A credential.", missing: [], onPath: false },
         ],
         // A need note left in the snapshot does not say a line again.
         notes: [
@@ -431,6 +432,7 @@ describe("Lesson overview", () => {
       "You need python3.Found on your PATH.",
       "You need jq and yq.Not found on your PATH: jq yq",
       "You need bwrap on Linux.Looking on your PATH...",
+      "A credential.",
     ]);
     expect(document.querySelector("[data-overview-notes]")).toBeNull();
   });

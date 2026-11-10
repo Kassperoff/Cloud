@@ -415,8 +415,10 @@ export const levelFolder = (s: EngineState, level: string) =>
   workOf(s, s.folders[level]) ?? projectDir(s);
 // The folder a lesson's check, git status and file reads run in: its work
 // folder, the copy's project/ by default (ticket 277). A lesson that runs in
-// a new copy runs in that copy's project/, and has none (null) until the
-// learner gives it, and no check runs for it before.
+// a new copy runs in that copy's project/, or at its root where its PATH
+// entry says `root` (a-5, whose page works where GitHub reads workflows),
+// and has none (null) until the learner gives it, and no check runs for it
+// before.
 // With `step`, the folder that step runs in: a Worked example step of a
 // lesson whose front matter says `worked: copy` runs in the copy's project/,
 // every other step in its lesson's folder (ticket 183). Every choice of a
@@ -429,7 +431,7 @@ export function folderOf(
   step: Step | null = null,
 ): string | null {
   const l = lessonIn(s, id);
-  if (pinOf(l) === "new copy") return workOf(s, s.folders[l.id], true);
+  if (pinOf(l) === "new copy") return workOf(s, s.folders[l.id], !l.root);
   if (step?.part === "Worked example" && l.content?.worked === "copy")
     return projectDir(s);
   const k = folderKey(s, id);
@@ -438,10 +440,19 @@ export function folderOf(
 // The second place a read verify looks (ticket 295): the copy's root when
 // the folder is the copy's project/. Claude Code keeps some files at the git
 // root (.claude/settings.local.json, Project-scope /workflows saves), and
-// project/ sits below it. A folder of the Learner's own is its own git root,
-// so it has none. Spread into an effect only when there is one.
-export const altOf = (s: EngineState, dir: string | null) =>
-  dir !== null && dir === projectDir(s) ? { alt: s.facts.root } : {};
+// project/ sits below it. A new copy's project/ has its copy's root the same
+// way, where GitHub reads workflows (a-capstone). A folder of the Learner's
+// own is its own git root, so it has none. Spread into an effect only when
+// there is one.
+export function altOf(s: EngineState, dir: string | null) {
+  if (dir === null) return {};
+  if (dir === projectDir(s)) return { alt: s.facts.root };
+  const copy = s.course
+    .filter((l) => pinOf(l) === "new copy")
+    .map((l) => s.folders[l.id])
+    .find((saved) => saved !== undefined && projectOf(s, saved) === dir);
+  return copy === undefined ? {} : { alt: copy };
+}
 // A lesson whose Check passed with its Tear down still to do (ticket 102):
 // it completes only after its last Tear down step.
 export const tearDownLeft = (s: EngineState, id: LessonId = s.lesson) => {
@@ -898,12 +909,14 @@ export const missingNeeds = (s: EngineState) =>
     .filter((n) => n.names.length);
 // Each You need line here with the commands the host found on no PATH
 // folder: [] when it found them all, null until it has answered for each.
+// A line that names no command (`-`) has nothing to look up on PATH.
 export const needLines = (s: EngineState) =>
   needsHere(s).map((n) => ({
     quote: n.quote,
     missing: n.commands.some((c) => s.commands[c] === undefined)
       ? null
       : absent(s, n.commands),
+    ...(n.commands.length ? {} : { onPath: false as const }),
   }));
 // What the host found wrong with the lesson's work folder, where it isn't the
 // copy (ticket 86): 'missing', 'gitBroken', 'notGit' or 'noPractice'. Null

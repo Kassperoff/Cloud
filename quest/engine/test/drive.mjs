@@ -37,6 +37,7 @@ import { DEMO_B2 } from "./fixtures/course.mjs";
 
 export {
   ACTION_TYPES,
+  altOf,
   EFFECT_TYPES,
   ENGINE_FIELDS,
   EVENT_TYPES,

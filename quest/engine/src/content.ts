@@ -538,6 +538,9 @@ const lessonSchema = z.strictObject({
   steps: z.string().regex(/^course\/steps\/.+\.md$/),
   check: z.string().min(1),
   folder: z.enum(["work", "copy", "new-copy"]),
+  // A new copy's lesson whose page works at that copy's root, not in its
+  // project/ (a-5: GitHub reads workflows only from the root).
+  root: z.literal(true).optional(),
   slow: z.array(z.number().int().nonnegative()),
 });
 const manifestSchema = z
@@ -579,6 +582,12 @@ const manifestSchema = z
           code: "custom",
           path: ["lessons", index, "check"],
           message: `expected ${lesson.id}`,
+        });
+      if (lesson.root && lesson.folder !== "new-copy")
+        ctx.addIssue({
+          code: "custom",
+          path: ["lessons", index, "root"],
+          message: "only a new-copy lesson works at its copy's root",
         });
       if (new Set(lesson.slow).size !== lesson.slow.length)
         ctx.addIssue({
@@ -1340,7 +1349,8 @@ const listOf = (raw: FrontValue | undefined) =>
 // need lists, as the app looks them up on the PATH. Each item is the
 // commands the intro's need line of the same place quotes (the first item
 // the first need line), and "on linux" makes them Linux only, as the
-// sandbox's are. Errors name the front matter's needs line.
+// sandbox's are. `-` is a need line with no command to look up, such as a
+// credential (a-5). Errors name the front matter's needs line.
 const COMMAND = /^[A-Za-z0-9][\w.+-]*$/;
 function needsOf(
   raw: FrontValue | undefined,
@@ -1356,6 +1366,8 @@ function needsOf(
     );
   }
   return items.map((item, k) => {
+    const quote = must(lines[k], "a need line").quote;
+    if (item.trim() === "-") return { commands: [], linux: false, quote };
     const words = item.trim().split(/\s+/);
     const linux =
       words.length > 2 && words.at(-2) === "on" && words.at(-1) === "linux";
@@ -1365,9 +1377,9 @@ function needsOf(
     if (!item.trim() || bad !== undefined)
       fail(
         at,
-        `needs item "${item}" is command names, then "on linux" for Linux only`,
+        `needs item "${item}" is command names, then "on linux" for Linux only, or - for none`,
       );
-    return { commands, linux, quote: must(lines[k], "a need line").quote };
+    return { commands, linux, quote };
   });
 }
 

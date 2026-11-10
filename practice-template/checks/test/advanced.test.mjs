@@ -1758,6 +1758,50 @@ test('a-5 still passes after the teardown deletes the workflow, since it reads t
   });
 });
 
+// The lesson's copy as the template lays it out: the git root holds
+// project/, where `npm run check` runs, and the page works at the root, where
+// GitHub reads workflows (265 dry run).
+function nestedActionsRepo({ inProject = false } = {}) {
+  return () => {
+    const dir = repo({ 'README.md': '# demo\n' }, { nested: true });
+    const root = dirname(dir);
+    git(root, 'remote', 'add', 'origin', ORIGIN);
+    commit(root, 'Start');
+    const at = inProject ? dir : root;
+    write(at, { [WORKFLOW]: LINKCHECK_REPORT });
+    const added = commit(root, 'Add the link check report workflow');
+    write(at, { [RUNS]: JSON.stringify([runOf(added)]) });
+    return dir;
+  };
+}
+
+test('a-5 reads the workflow and the saved runs at the copy\'s root, from project/ or the root', () => {
+  withRepo(nestedActionsRepo(), (dir) => {
+    for (const where of [dir, dirname(dir)]) {
+      const { code, out } = a5(where);
+      assert.equal(code, 0, `${where}\n${out}`);
+    }
+    // A fix still in the root's working tree is pointed out from project/.
+    write(dirname(dir), { [WORKFLOW]: reportWith([`@${PIN} # v1.0.237`, '@v1']) });
+    git(dirname(dir), 'commit', '-qam', 'Pin to v1');
+    write(dirname(dir), { [WORKFLOW]: LINKCHECK_REPORT });
+    assert.match(String(setupHint(dir)), /`@v1` on line 18 can move.* Your copy of `\.github\/workflows\/linkcheck-report\.yml` has changes that aren't committed/);
+  });
+  // An uncommitted workflow at the root is named from the root.
+  withRepo(() => {
+    const dir = repo({ 'README.md': '# demo\n' }, { nested: true });
+    commit(dirname(dir), 'Start');
+    write(dirname(dir), { [WORKFLOW]: LINKCHECK_REPORT });
+    return dir;
+  }, (dir) => {
+    assert.match(String(setupHint(dir)), /^`\.github\/workflows\/linkcheck-report\.yml` isn't committed\. Run `git add \.github\/workflows\/linkcheck-report\.yml`/);
+  });
+  // project/.github/workflows/ is no place GitHub runs a workflow from.
+  withRepo(nestedActionsRepo({ inProject: true }), (dir) => {
+    assert.match(String(setupHint(dir)), /^There is no committed workflow that runs `anthropics\/claude-code-action`/);
+  });
+});
+
 test('a-5 accepts the workflow written in other ways', () => {
   const steps = LINKCHECK_REPORT.split('\n');
   const atStepsIndent = steps.map((l, i) => (i > 12 ? l.replace(/^ {2}/, '') : l)).join('\n');

@@ -220,12 +220,12 @@ export function LessonOverview() {
         >
           <h2 className="text-sm text-muted">What you need</h2>
           <ul className="grid gap-1.5 text-sm">
-            {lesson.needs.map(({ quote, missing }, i) => (
+            {lesson.needs.map(({ quote, missing, onPath }, i) => (
               <li key={i} className="grid justify-items-start gap-0.5">
                 <span>
                   <InlineText text={quote} />
                 </span>
-                {missing === null ? (
+                {onPath === false ? null : missing === null ? (
                   <span className="text-muted">Looking on your PATH...</span>
                 ) : missing.length === 0 ? (
                   <span>Found on your PATH.</span>

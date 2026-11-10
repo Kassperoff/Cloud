@@ -234,6 +234,12 @@ const restore =
   (dir) => {
     put(path, readFileSync(join(SOLUTIONS, id, inert(path)), "utf8"))(dir);
   };
+/** Runs `stage` at the git root above the work folder, a copy's project/. */
+const atRoot =
+  (stage: Stage): Stage =>
+  (dir) => {
+    stage(dirname(dir));
+  };
 /** Runs git in the work folder, as replay.mjs runs it. */
 const git =
   (...args: string[]): Stage =>
@@ -654,15 +660,15 @@ export const STAGE: Record<string, Stage> = {
     ),
   ),
   "a-7:Y4.2": smallCommit(),
-  // a-5, in its new copy: the hand-started workflow as the page gives it,
-  // committed and pushed to a remote of its own; the report workflow (its
-  // solution removes it at the end, so it comes back first); then both
-  // removed and pushed.
+  // a-5, at its new copy's root (265): the hand-started workflow as the page
+  // gives it, committed and pushed to a remote of its own; the report
+  // workflow (its solution removes it at the end, so it comes back first);
+  // then both removed and pushed.
   "a-5:W1.0": (dir) => {
     put(".github/workflows/ask-claude.yml", `${codeOf("a-5:W1.0")}\n`)(dir);
   },
   "a-5:W1.3": (dir) => {
-    const remote = join(dir, "../../actions-remote.git");
+    const remote = join(dir, "../actions-remote.git");
     if (!existsSync(remote)) {
       git("init", "-q", "--bare", remote)(dir);
       git("remote", "add", "origin", remote)(dir);
@@ -686,16 +692,26 @@ export const STAGE: Record<string, Stage> = {
     ),
     commitAndPush("Remove the Claude workflows"),
   ),
-  // a-capstone: the review workflow back (its solution removes it at the
-  // end), committed and pushed, then removed again and pushed.
-  "a-capstone:T5.0": all(
-    restore("a-capstone", ".github/workflows/claude-review.yml"),
-    git("add", ".github/workflows/claude-review.yml"),
-    commitAndPush("Review pull requests with the team review skill"),
+  // a-capstone: the review workflow back at the copy's root, above its
+  // project/, where GitHub reads it (its solution removes it at the end),
+  // committed and pushed, then removed again and pushed.
+  "a-capstone:T5.0": atRoot(
+    all(
+      restore("a-capstone", ".github/workflows/claude-review.yml"),
+      git("add", ".github/workflows/claude-review.yml"),
+      commitAndPush("Review pull requests with the team review skill"),
+    ),
   ),
-  "a-capstone:D1.0": all(
-    git("rm", "-q", "--ignore-unmatch", ".github/workflows/claude-review.yml"),
-    commitAndPush("Remove the pull request review workflow"),
+  "a-capstone:D1.0": atRoot(
+    all(
+      git(
+        "rm",
+        "-q",
+        "--ignore-unmatch",
+        ".github/workflows/claude-review.yml",
+      ),
+      commitAndPush("Remove the pull request review workflow"),
+    ),
   ),
 };
 

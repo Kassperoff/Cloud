@@ -496,8 +496,9 @@ test("f on another lesson's overview changes its level's folder; i-capstone, pin
 
 // ---- pinned folders --------------------------------------------------------------
 const ACTIONS = "/home/ali/claude-actions-practice";
-// Its project/, where its checks run (ticket 277).
-const ACTIONS_WORK = `${ACTIONS}/project`;
+// Where a-5's checks run: the new copy's root, where its page works and
+// GitHub reads workflows (265), not its project/ as other lessons' (277).
+const ACTIONS_WORK = ACTIONS;
 const overviewAt = (id, folders) => {
   const d = atI1(folders);
   d.open(id);

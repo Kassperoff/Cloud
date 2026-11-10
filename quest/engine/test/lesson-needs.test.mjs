@@ -70,6 +70,17 @@ test('front matter names the commands the page needs: each needs item is the com
     { commands: ["bwrap", "socat"], linux: true, quote: NEED_SANDBOX },
   ]);
   assert.deepEqual(parse().needs, [], "a lesson that names none needs none");
+  // `-`: a need line with no command to look up, such as a credential.
+  assert.deepEqual(
+    parse({
+      front: ["needs: [jq, -]"],
+      intro: [`- need: "${NEED_JQ}"`, `- need: "${NEED_SANDBOX}"`],
+    }).needs,
+    [
+      { commands: ["jq"], linux: false, quote: NEED_JQ },
+      { commands: [], linux: false, quote: NEED_SANDBOX },
+    ],
+  );
 });
 
 // was learn-needs:39
@@ -231,6 +242,15 @@ test("the overview's needs read each You need line in three states: null until m
   // Off Linux the Linux-only line is not there.
   assert.deepEqual(project(atIntro(NEEDS).state).lesson.needs, [
     { quote: NEED_JQ, missing: null },
+  ]);
+  // A line with no command asks main for nothing and has nothing on PATH.
+  const none = atIntro({
+    front: ["needs: [-]"],
+    intro: [`- need: "${NEED_JQ}"`],
+  });
+  assert.deepEqual(introAsks(none.state), []);
+  assert.deepEqual(project(none.state).lesson.needs, [
+    { quote: NEED_JQ, missing: [], onPath: false },
   ]);
 });
 

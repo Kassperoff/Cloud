@@ -26,6 +26,8 @@ export interface PathEntry {
   folder?: "copy";
   // A lesson that runs in a new copy of the template (a-5, a-capstone).
   newCopy?: true;
+  // A new copy's lesson that runs at that copy's root, not its project/ (a-5).
+  root?: true;
   // A lesson of a level that practises in a work folder.
   work?: true;
 }
@@ -41,6 +43,7 @@ export interface CourseEntry {
   minutes?: string;
   folder?: "copy";
   newCopy?: true;
+  root?: true;
   work?: true;
   title?: string;
   url?: string;
