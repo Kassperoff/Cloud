@@ -29,7 +29,9 @@ test('tree-run ends the command and what it left running at the time limit', { s
   const beat = join(outside, 'beat');
   try {
     const started = Date.now();
-    const told = treeRun(['-c', `( while :; do date > "${beat}"; sleep 0.1; done ) & sleep 30`], 1000);
+    // The loop writes its first beat before the command sleeps, so a busy
+    // machine can't reach the time limit before the loop has started.
+    const told = treeRun(['-c', `( while :; do date > "${beat}"; sleep 0.1; done ) & until [ -e "${beat}" ]; do sleep 0.05; done; sleep 30`], 3000);
     assert.equal(told.timedOut, true);
     assert.ok(Date.now() - started < 10_000, 'the run went on past the time limit');
     const last = statSync(beat).mtimeMs;
