@@ -14,7 +14,10 @@ import { openRepo } from './repo.mjs';
 
 export const WORKFLOWS = '.github/workflows';
 // GitHub reads workflow files only directly in .github/workflows/, at the
-// repository's root. A copy's checks run in project/, below that root, so
+// repository's root ("GitHub searches the `.github/workflows` directory in
+// the root of your repository":
+// https://docs.github.com/en/actions/concepts/workflows-and-actions/workflows).
+// A copy's checks run in project/, below that root, so
 // every read here names its paths from the root, wherever the check runs.
 const WORKFLOW_FILE = /^\.github\/workflows\/[^/]+\.ya?ml$/;
 const ACTION = /^anthropics\/claude-code-action(?:@(.*))?$/i;
