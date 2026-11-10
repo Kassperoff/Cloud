@@ -44,6 +44,12 @@ const NEW_COPY = new Set(
     .filter((l) => l.newCopy)
     .map((l) => l.id),
 );
+/** The new copies' Lessons that run at the copy's root (a-5, 265). */
+const AT_ROOT = new Set(
+  courseLessons()
+    .filter((l) => l.root)
+    .map((l) => l.id),
+);
 /** Each Level's capstone, and its Level's name. */
 const CAPSTONES: Record<string, string> = {
   "b-capstone": "Beginner",
@@ -144,7 +150,10 @@ for (const id of ORDER)
       const fresh = newCopy ? newCopyFor(id, copy) : undefined;
       if (fresh === undefined) copy.apply(id);
       else applyLesson({ repoRoot, copy: fresh, id });
-      const folder = join(fresh ?? copy.dir, "project");
+      const folder =
+        fresh !== undefined && AT_ROOT.has(id)
+          ? fresh
+          : join(fresh ?? copy.dir, "project");
       const taken = takeOutFresh(id, folder);
       const frames = await recordFrames(page);
       const seen = watch(page);

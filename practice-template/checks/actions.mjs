@@ -583,7 +583,7 @@ export function uncommittedWorkflows(repo) {
     /** @type {string | null} */
     let committed = null;
     try {
-      committed = root.git('show', `HEAD:${path}`);
+      committed = root.git('show', `HEAD:./${path}`);
     } catch {
       // Not in HEAD.
     }
@@ -592,14 +592,15 @@ export function uncommittedWorkflows(repo) {
   return out;
 }
 
-// The blob HEAD holds at `path`, named from the root, or null.
+// The blob HEAD holds at `path`, named from the root, or null. It reads from
+// the root, so `./` is the root there.
 /**
  * @param {Repo} repo
  * @param {string} path
  */
 export function headBlob(repo, path) {
   try {
-    return repo.git('rev-parse', '--verify', '--quiet', `HEAD:${path}`) || null;
+    return rootRepo(repo).git('rev-parse', '--verify', '--quiet', `HEAD:./${path}`) || null;
   } catch {
     return null;
   }

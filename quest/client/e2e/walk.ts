@@ -53,6 +53,8 @@ interface CourseStep {
 interface CourseLesson {
   id: string;
   newCopy?: boolean;
+  /** A new copy's Lesson that runs at that copy's root, not its project/ (a-5). */
+  root?: boolean;
   content: {
     worked?: string;
     intro?: { payoff?: string };
